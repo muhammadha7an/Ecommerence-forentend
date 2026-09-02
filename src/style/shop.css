@@ -1,0 +1,472 @@
+/* ==========================================================================
+   AURA E-COMMERCE - SHOP PAGE STYLESHEET
+   ========================================================================== */
+
+.shop-page {
+  background-color: #ffffff;
+  color: #26312f;
+  min-height: 100vh;
+}
+
+/* --- 1. HERO SECTION --- */
+.shop-hero {
+  background: linear-gradient(135deg, #f7f5ef 0%, #efece3 100%);
+  padding: 3.5rem clamp(1.25rem, 5vw, 5rem) 2.5rem;
+  border-bottom: 1px solid #eef0eb;
+}
+
+.shop-hero-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #83918d;
+  margin-bottom: 1rem;
+}
+
+.breadcrumb a {
+  color: #53615d;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.breadcrumb a:hover {
+  color: #ad4b2f;
+}
+
+.breadcrumb .current {
+  color: #26312f;
+  font-weight: 600;
+}
+
+.shop-hero h1 {
+  font-size: clamp(2rem, 3.5vw, 2.8rem);
+  font-weight: 800;
+  color: #26312f;
+  margin-bottom: 0.5rem;
+}
+
+.shop-hero p {
+  color: #53615d;
+  font-size: 1.05rem;
+  max-width: 600px;
+  margin-bottom: 2rem;
+}
+
+.quick-category-pills {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.pill {
+  padding: 0.5rem 1.1rem;
+  border-radius: 30px;
+  border: 1px solid #dce2d6;
+  background: #ffffff;
+  color: #53615d;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.pill:hover,
+.pill.active {
+  background: #26312f;
+  color: #ffffff;
+  border-color: #26312f;
+}
+
+/* --- 2. LAYOUT GRID --- */
+.shop-layout-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3rem clamp(1.25rem, 5vw, 5rem);
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+
+/* --- 3. FILTER SIDEBAR --- */
+.filter-sidebar {
+  background: #ffffff;
+  border: 1px solid #eef0eb;
+  border-radius: 12px;
+  padding: 1.75rem;
+  position: sticky;
+  top: 2rem;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #eef0eb;
+}
+
+.sidebar-header h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #26312f;
+}
+
+.close-mobile-filter {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.filter-group {
+  margin-bottom: 1.75rem;
+}
+
+.filter-label {
+  display: block;
+  font-size: 0.825rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #26312f;
+  margin-bottom: 0.75rem;
+}
+
+/* Search Box */
+.search-input-wrapper {
+  position: relative;
+}
+
+.search-input-wrapper input {
+  width: 100%;
+  padding: 0.7rem 2.2rem 0.7rem 0.9rem;
+  border: 1px solid #dce2d6;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-input-wrapper input:focus {
+  border-color: #ad4b2f;
+}
+
+.search-input-wrapper svg {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: #83918d;
+}
+
+/* Category List */
+.category-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.category-list button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0.55rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #53615d;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.category-list button:hover,
+.category-list button.active {
+  background: #f7f5ef;
+  color: #ad4b2f;
+  font-weight: 600;
+}
+
+.category-list .count {
+  font-size: 0.78rem;
+  color: #9ba7a3;
+  background: #f0ede6;
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+}
+
+/* Price Range Slider */
+.price-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.price-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ad4b2f;
+}
+
+.price-slider {
+  width: 100%;
+  accent-color: #ad4b2f;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.price-min-max {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #9ba7a3;
+  margin-top: 0.25rem;
+}
+
+/* Checkbox */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  color: #384542;
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  accent-color: #ad4b2f;
+  width: 16px;
+  height: 16px;
+}
+
+.btn-reset {
+  width: 100%;
+  padding: 0.65rem;
+  font-size: 0.85rem;
+  border-color: #dce2d6;
+}
+
+/* --- 4. TOOLBAR & PRODUCT GRID --- */
+.shop-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eef0eb;
+}
+
+.results-count {
+  font-size: 0.95rem;
+  color: #53615d;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-mobile-filter-trigger {
+  display: none;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  background: #f7f5ef;
+  border: 1px solid #dce2d6;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-mobile-filter-trigger svg {
+  width: 16px;
+  height: 16px;
+}
+
+.sort-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #53615d;
+}
+
+.sort-dropdown select {
+  padding: 0.55rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid #dce2d6;
+  background: #ffffff;
+  font-size: 0.875rem;
+  color: #26312f;
+  outline: none;
+  cursor: pointer;
+}
+
+.shop-product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+/* Empty State */
+.empty-shop-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: #f7f5ef;
+  border-radius: 12px;
+}
+
+.empty-shop-state svg {
+  width: 48px;
+  height: 48px;
+  color: #9ba7a3;
+  margin-bottom: 1rem;
+}
+
+.empty-shop-state h3 {
+  font-size: 1.3rem;
+  color: #26312f;
+  margin-bottom: 0.5rem;
+}
+
+.empty-shop-state p {
+  color: #53615d;
+  margin-bottom: 1.5rem;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 3.5rem;
+}
+
+.page-btn {
+  padding: 0.6rem 1rem;
+  border: 1px solid #dce2d6;
+  background: #ffffff;
+  color: #26312f;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-btn:hover:not(:disabled),
+.page-btn.active {
+  background: #26312f;
+  color: #ffffff;
+  border-color: #26312f;
+}
+
+.page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* --- 5. SHOPPING GUARANTEE STRIP --- */
+.shop-guarantee-strip {
+  background: #f7f5ef;
+  border-top: 1px solid #eef0eb;
+  padding: 3rem clamp(1.25rem, 5vw, 5rem);
+  margin-top: 4rem;
+}
+
+.guarantee-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  text-align: center;
+}
+
+.guarantee-card h4 {
+  font-size: 1rem;
+  color: #26312f;
+  margin-bottom: 0.3rem;
+}
+
+.guarantee-card p {
+  font-size: 0.85rem;
+  color: #53615d;
+}
+
+/* ==========================================================================
+   6. RESPONSIVE MEDIA QUERIES
+   ========================================================================== */
+
+@media (max-width: 992px) {
+  .shop-layout-container {
+    grid-template-columns: 1fr;
+  }
+
+  .btn-mobile-filter-trigger {
+    display: inline-flex;
+  }
+
+  .filter-sidebar {
+    position: fixed;
+    top: 0;
+    left: -320px;
+    width: 300px;
+    height: 100vh;
+    z-index: 1000;
+    overflow-y: auto;
+    border-radius: 0;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
+    transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .filter-sidebar.open {
+    left: 0;
+  }
+
+  .close-mobile-filter {
+    display: block;
+  }
+
+  .filter-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+    z-index: 999;
+  }
+}
+
+@media (max-width: 600px) {
+  .shop-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .toolbar-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .guarantee-container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
