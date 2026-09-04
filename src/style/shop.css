@@ -96,6 +96,10 @@
   align-items: start;
 }
 
+.shop-main {
+  min-width: 0;
+}
+
 /* --- 3. FILTER SIDEBAR --- */
 .filter-sidebar {
   background: #ffffff;
@@ -280,6 +284,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  min-width: 0;
 }
 
 .btn-mobile-filter-trigger {
@@ -317,6 +322,7 @@
   color: #26312f;
   outline: none;
   cursor: pointer;
+  max-width: 100%;
 }
 
 .shop-product-grid {
@@ -355,8 +361,10 @@
 .pagination {
   display: flex;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 3.5rem;
+  max-width: 100%;
 }
 
 .page-btn {
@@ -463,6 +471,14 @@
   .toolbar-actions {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .sort-dropdown {
+    min-width: 0;
+  }
+
+  .sort-dropdown select {
+    width: min(178px, calc(100vw - 150px));
   }
 
   .guarantee-container {

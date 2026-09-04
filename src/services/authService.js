@@ -111,6 +111,49 @@ const getOrders = async () => {
   return response.data;
 };
 
+const getOrder = async (orderId) => {
+  const response = await axios.get(`${API_BASE_URL}/api/orders/${orderId}`, {
+    headers: authHeaders(),
+  });
+
+  return response.data;
+};
+
+const getAdminOverview = async () => {
+  const response = await axios.get(`${API_BASE_URL}/api/admin/overview`, {
+    headers: authHeaders(),
+  });
+
+  return response.data;
+};
+
+const getAdminUsers = async (search = "") => {
+  const response = await axios.get(`${API_BASE_URL}/api/admin/users`, {
+    headers: authHeaders(),
+    params: search ? { search } : {},
+  });
+
+  return response.data;
+};
+
+const getAdminOrders = async () => {
+  const response = await axios.get(`${API_BASE_URL}/api/admin/orders`, {
+    headers: authHeaders(),
+  });
+
+  return response.data;
+};
+
+const updateAdminOrderStatus = async (orderId, orderStatus) => {
+  const response = await axios.patch(
+    `${API_BASE_URL}/api/admin/orders/${orderId}/status`,
+    { orderStatus },
+    { headers: authHeaders() }
+  );
+
+  return response.data;
+};
+
 const authService = {
   signup,
   login,
@@ -121,6 +164,11 @@ const authService = {
   resetPassword,
   logout,
   getOrders,
+  getOrder,
+  getAdminOverview,
+  getAdminUsers,
+  getAdminOrders,
+  updateAdminOrderStatus,
 };
 
 export default authService;

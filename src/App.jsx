@@ -10,6 +10,7 @@ import './style/Contact.css'
 import './style/checkout.css'
 import './style/success.css'
 import './style/account.css'
+import './style/dashboard.css'
 
 import { useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -33,10 +34,15 @@ import Login from './pages/Login.jsx'
 import Account from './pages/Account.jsx'
 import ForgotPassword from './pages/ForgotPassword.jsx'
 import ResetPassword from './pages/ResetPassword.jsx'
+import UserDashboard from './pages/UserDashboard'
+import UserOrders from './pages/UserOrders'
+import UserOrderDetails from './pages/UserOrderDetails'
+import AdminDashboard from './pages/AdminDashboard'
 
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import { hydrateCart } from './redux/slices/cartSlice'
 import { hydrateWishlist } from './redux/slices/wishlistSlice'
+
 
 function UserDataPersistence() {
     const dispatch = useDispatch()
@@ -168,7 +174,41 @@ function App() {
                             element={<ResetPassword />}
                         />
 
- 
+                        <Route
+                            path="/dashboard"
+                            element={
+                                <ProtectedRoute>
+                                    <UserDashboard />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="/dashboard/orders"
+                            element={
+                                <ProtectedRoute>
+                                    <UserOrders />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="/dashboard/orders/:orderId"
+                            element={
+                                <ProtectedRoute>
+                                    <UserOrderDetails />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="/admin/dashboard"
+                            element={
+                                <ProtectedRoute adminOnly>
+                                    <AdminDashboard />
+                                </ProtectedRoute>
+                            }
+                        />
 
                         <Route
                             path="/account"
