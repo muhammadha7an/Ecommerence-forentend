@@ -16,8 +16,13 @@ import { useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 
-import Header from './components/Header.jsx'
-import Footer from './components/Footer.jsx'
+import WebsiteLayout from './components/WebsiteLayout.jsx'
+import DashboardLayout from './components/DashboardLayout.jsx'
+import AdminDashboardLayout from './components/AdminDashboardLayout.jsx'
+import AdminRoute from './components/AdminRoute.jsx'
+import ProtectedRoute from './components/ProtectedRoute.jsx'
+import { hydrateCart } from './redux/slices/cartSlice'
+import { hydrateWishlist } from './redux/slices/wishlistSlice'
 
 import Home from './pages/Home.jsx'
 import Shop from './pages/Shop.jsx'
@@ -27,208 +32,110 @@ import Checkout from './pages/Checkout.jsx'
 import About from './pages/About.jsx'
 import Contact from './pages/Contact.jsx'
 import Success from './pages/Success.jsx'
-
-
 import Signup from './pages/Signup.jsx'
 import Login from './pages/Login.jsx'
 import Account from './pages/Account.jsx'
 import ForgotPassword from './pages/ForgotPassword.jsx'
 import ResetPassword from './pages/ResetPassword.jsx'
-import UserDashboard from './pages/UserDashboard'
-import UserOrders from './pages/UserOrders'
-import UserOrderDetails from './pages/UserOrderDetails'
-import AdminDashboard from './pages/AdminDashboard'
-
-import ProtectedRoute from './components/ProtectedRoute.jsx'
-import { hydrateCart } from './redux/slices/cartSlice'
-import { hydrateWishlist } from './redux/slices/wishlistSlice'
-
+import UserDashboard from './pages/UserDashboard.jsx'
+import UserOrders from './pages/UserOrders.jsx'
+import UserOrderDetails from './pages/UserOrderDetails.jsx'
+import AdminDashboard from './pages/AdminDashboard.jsx'
+import AdminLogin from './pages/AdminLogin.jsx'
+import AdminUsers from './pages/AdminUsers.jsx'
+import AdminOrders from './pages/AdminOrders.jsx'
+import AdminCatalogPlaceholder from './pages/AdminCatalogPlaceholder.jsx'
 
 function UserDataPersistence() {
-    const dispatch = useDispatch()
-    const location = useLocation()
-    const cartItems = useSelector((state) => state.cart.items)
-    const wishlistItems = useSelector((state) => state.wishlist.items)
-    const identityRef = useRef(null)
-    const skipSaveRef = useRef(true)
-    const user = JSON.parse(localStorage.getItem('user') || 'null')
-    const identity = user?.id || user?._id || 'guest'
-    const cartKey = `cart:${identity}`
-    const wishlistKey = `wishlist:${identity}`
+  const dispatch = useDispatch()
+  const location = useLocation()
+  const cartItems = useSelector((state) => state.cart.items)
+  const wishlistItems = useSelector((state) => state.wishlist.items)
+  const identityRef = useRef(null)
+  const skipSaveRef = useRef(true)
+  const user = JSON.parse(localStorage.getItem('user') || 'null')
+  const identity = user?.id || user?._id || 'guest'
+  const cartKey = `cart:${identity}`
+  const wishlistKey = `wishlist:${identity}`
 
-    useEffect(() => {
-        const previousIdentity = identityRef.current
-        const previousCart = previousIdentity
-            ? JSON.parse(localStorage.getItem(`cart:${previousIdentity}`) || '[]')
-            : []
-        const savedCart = JSON.parse(localStorage.getItem(cartKey) || '[]')
-        const savedWishlist = JSON.parse(localStorage.getItem(wishlistKey) || '[]')
-        const nextCart = identity !== 'guest' && previousIdentity === 'guest' && savedCart.length === 0
-            ? previousCart
-            : savedCart
+  useEffect(() => {
+    const previousIdentity = identityRef.current
+    const previousCart = previousIdentity
+      ? JSON.parse(localStorage.getItem(`cart:${previousIdentity}`) || '[]')
+      : []
+    const savedCart = JSON.parse(localStorage.getItem(cartKey) || '[]')
+    const savedWishlist = JSON.parse(localStorage.getItem(wishlistKey) || '[]')
+    const nextCart = identity !== 'guest' && previousIdentity === 'guest' && savedCart.length === 0
+      ? previousCart
+      : savedCart
 
-        skipSaveRef.current = true
-        dispatch(hydrateCart(nextCart))
-        dispatch(hydrateWishlist(savedWishlist))
+    skipSaveRef.current = true
+    dispatch(hydrateCart(nextCart))
+    dispatch(hydrateWishlist(savedWishlist))
 
-        if (identity !== 'guest' && previousIdentity === 'guest') {
-            localStorage.removeItem('cart:guest')
-        }
+    if (identity !== 'guest' && previousIdentity === 'guest') {
+      localStorage.removeItem('cart:guest')
+    }
 
-        identityRef.current = identity
-    }, [cartKey, wishlistKey, identity, dispatch, location.pathname])
+    identityRef.current = identity
+  }, [cartKey, wishlistKey, identity, dispatch, location.pathname])
 
-    useEffect(() => {
-        if (skipSaveRef.current) {
-            skipSaveRef.current = false
-            return
-        }
+  useEffect(() => {
+    if (skipSaveRef.current) {
+      skipSaveRef.current = false
+      return
+    }
 
-        localStorage.setItem(cartKey, JSON.stringify(cartItems))
-        localStorage.setItem(wishlistKey, JSON.stringify(wishlistItems))
-    }, [cartItems, wishlistItems, cartKey, wishlistKey])
+    localStorage.setItem(cartKey, JSON.stringify(cartItems))
+    localStorage.setItem(wishlistKey, JSON.stringify(wishlistItems))
+  }, [cartItems, wishlistItems, cartKey, wishlistKey])
 
-    return null
+  return null
 }
 
-
 function App() {
-    return (
-        <BrowserRouter>
-            <UserDataPersistence />
+  return (
+    <BrowserRouter>
+      <UserDataPersistence />
+      <Routes>
+        <Route element={<WebsiteLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/shop" element={<Shop />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/success" element={<Success />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+        </Route>
 
-            <div className="app-shell">
+        <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+          <Route path="/dashboard" element={<UserDashboard />} />
+          <Route path="/dashboard/orders" element={<UserOrders />} />
+          <Route path="/dashboard/orders/:orderId" element={<UserOrderDetails />} />
+          <Route path="/dashboard/profile" element={<Account />} />
+        </Route>
 
-                <Header />
-
-                <main className="site-main">
-
-                    <Routes>
-
-                       
-
-                        <Route
-                            path="/"
-                            element={<Home />}
-                        />
-
-                        <Route
-                            path="/shop"
-                            element={<Shop />}
-                        />
-
-                        <Route
-                            path="/cart"
-                            element={<Cart />}
-                        />
-
-                        <Route
-                            path="/checkout"
-                            element={
-                                <ProtectedRoute>
-                                    <Checkout />
-                                </ProtectedRoute>
-                            }
-                        />
-
-                        <Route
-                            path="/wishlist"
-                            element={<Wishlist />}
-                        />
-
-                        <Route
-                            path="/about"
-                            element={<About />}
-                        />
-
-                        <Route
-                            path="/contact"
-                            element={<Contact />}
-                        />
-
-                        <Route
-                            path="/success"
-                            element={<Success />}
-                        />
-
-
-                       
-
-                        <Route
-                            path="/signup"
-                            element={<Signup />}
-                        />
-
-                        <Route
-                            path="/login"
-                            element={<Login />}
-                        />
-
-                        <Route
-                            path="/forgot-password"
-                            element={<ForgotPassword />}
-                        />
-
-                        <Route
-                            path="/reset-password/:token"
-                            element={<ResetPassword />}
-                        />
-
-                        <Route
-                            path="/dashboard"
-                            element={
-                                <ProtectedRoute>
-                                    <UserDashboard />
-                                </ProtectedRoute>
-                            }
-                        />
-
-                        <Route
-                            path="/dashboard/orders"
-                            element={
-                                <ProtectedRoute>
-                                    <UserOrders />
-                                </ProtectedRoute>
-                            }
-                        />
-
-                        <Route
-                            path="/dashboard/orders/:orderId"
-                            element={
-                                <ProtectedRoute>
-                                    <UserOrderDetails />
-                                </ProtectedRoute>
-                            }
-                        />
-
-                        <Route
-                            path="/admin/dashboard"
-                            element={
-                                <ProtectedRoute adminOnly>
-                                    <AdminDashboard />
-                                </ProtectedRoute>
-                            }
-                        />
-
-                        <Route
-                            path="/account"
-                            element={
-                                <ProtectedRoute>
-                                    <Account />
-                                </ProtectedRoute>
-                            }
-                        />
-
-                    </Routes>
-
-                </main>
-
-                <Footer />
-
-            </div>
-
-        </BrowserRouter>
-    )
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route element={<AdminRoute><AdminDashboardLayout /></AdminRoute>}>
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/orders" element={<AdminOrders />} />
+          <Route path="/admin/products" element={<AdminCatalogPlaceholder resource="Products" />} />
+          <Route path="/admin/products/add" element={<AdminCatalogPlaceholder resource="Products" />} />
+          <Route path="/admin/products/edit/:id" element={<AdminCatalogPlaceholder resource="Products" />} />
+          <Route path="/admin/categories" element={<AdminCatalogPlaceholder resource="Categories" />} />
+          <Route path="/admin/categories/add" element={<AdminCatalogPlaceholder resource="Categories" />} />
+          <Route path="/admin/categories/edit/:id" element={<AdminCatalogPlaceholder resource="Categories" />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  )
 }
 
 export default App

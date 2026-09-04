@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import authService from "../services/authService";
 
@@ -13,7 +13,7 @@ function AdminDashboard() {
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const [overview, userData, orderData] = await Promise.all([
         authService.getAdminOverview(),
@@ -27,9 +27,9 @@ function AdminDashboard() {
       if (requestError.response?.status === 401) { authService.logout(); navigate("/login"); return; }
       setError(requestError.response?.data?.message || "Unable to load admin data");
     }
-  };
+  }, [navigate, search]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const updateStatus = async (id, status) => {
     try {

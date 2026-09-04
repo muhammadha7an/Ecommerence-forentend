@@ -38,6 +38,17 @@ const login = async (userData) => {
   return response.data;
 };
 
+const adminLogin = async (credentials) => {
+  const response = await axios.post(`${API_URL}/admin-login`, credentials);
+
+  if (response.data.token) {
+    localStorage.setItem("token", response.data.token);
+    localStorage.setItem("user", JSON.stringify(response.data.user));
+  }
+
+  return response.data;
+};
+
 const getMe = async () => {
   const response = await axios.get(
     `${API_URL}/me`,
@@ -157,6 +168,7 @@ const updateAdminOrderStatus = async (orderId, orderStatus) => {
 const authService = {
   signup,
   login,
+  adminLogin,
   getMe,
   updateProfile,
   changePassword,
