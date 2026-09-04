@@ -40,7 +40,7 @@ function Account() {
                     name: data.user.name,
                     email: data.user.email,
                 });
-            } catch (error) {
+            } catch {
                 localStorage.removeItem("token");
                 localStorage.removeItem("user");
 

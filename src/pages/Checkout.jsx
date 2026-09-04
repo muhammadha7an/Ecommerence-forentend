@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
+import { API_BASE_URL } from '../services/api'
  
 
 export default function Checkout() {
@@ -37,7 +38,7 @@ export default function Checkout() {
             setLoading(true)
             setError('')
 
-            const response = await fetch('http://localhost:5000/api/create-checkout-session', {
+            const response = await fetch(`${API_BASE_URL}/api/create-checkout-session`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useSearchParams, Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
  
+const emptyList = [];
 
 export default function Shop() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Redux store data
-  const products = useSelector((state) => state.products.items) || [];
-  const categories = useSelector((state) => state.categories.items) || [];
+  const products = useSelector((state) => state.products.items) ?? emptyList;
+  const categories = useSelector((state) => state.categories.items) ?? emptyList;
 
   // Filter States
   const categoryParam = searchParams.get('category') || 'all';

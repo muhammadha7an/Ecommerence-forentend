@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux'
 import jsPDF from 'jspdf'
 
 import { clearCart } from '../redux/slices/cartSlice'
+import { API_BASE_URL } from '../services/api'
  
 
 export default function Success() {
@@ -51,7 +52,7 @@ export default function Success() {
 
                 const response =
                     await fetch(
-                        `http://localhost:5000/api/checkout-session/${sessionId}`
+                        `${API_BASE_URL}/api/checkout-session/${sessionId}`
                     )
 
 

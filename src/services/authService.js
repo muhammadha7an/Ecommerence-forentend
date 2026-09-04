@@ -1,7 +1,16 @@
 
 import axios from "axios";
+import { API_BASE_URL } from "./api";
 
-const API_URL = `${import.meta.env.VITE_API_URL}/api/auth`;
+const API_URL = `${API_BASE_URL}/api/auth`;
+
+const authHeaders = () => {
+  const token = localStorage.getItem("token");
+
+  return token
+    ? { Authorization: `Bearer ${token}` }
+    : {};
+};
 
 const signup = async (userData) => {
   const response = await axios.post(
@@ -30,14 +39,10 @@ const login = async (userData) => {
 };
 
 const getMe = async () => {
-  const token = localStorage.getItem("token");
-
   const response = await axios.get(
     `${API_URL}/me`,
     {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: authHeaders(),
     }
   );
 
@@ -45,15 +50,11 @@ const getMe = async () => {
 };
 
 const updateProfile = async (userData) => {
-  const token = localStorage.getItem("token");
-
   const response = await axios.put(
     `${API_URL}/profile`,
     userData,
     {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: authHeaders(),
     }
   );
 
@@ -68,15 +69,11 @@ const updateProfile = async (userData) => {
 };
 
 const changePassword = async (passwordData) => {
-  const token = localStorage.getItem("token");
-
   const response = await axios.put(
     `${API_URL}/change-password`,
     passwordData,
     {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: authHeaders(),
     }
   );
 
