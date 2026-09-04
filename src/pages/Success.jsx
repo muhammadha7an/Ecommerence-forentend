@@ -52,7 +52,8 @@ export default function Success() {
 
                 const response =
                     await fetch(
-                        `${API_BASE_URL}/api/checkout-session/${sessionId}`
+                        `${API_BASE_URL}/api/checkout-session/${sessionId}`,
+                        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
                     )
 
 

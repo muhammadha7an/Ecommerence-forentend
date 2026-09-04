@@ -9,6 +9,9 @@ const cartSlice = createSlice({
     initialState,
 
     reducers: {
+        hydrateCart: (state, action) => {
+            state.items = Array.isArray(action.payload) ? action.payload : []
+        },
    
             addToCart: (state, action) => {
                 console.log('REDUX RECEIVED:', action.payload)
@@ -65,6 +68,7 @@ const cartSlice = createSlice({
 
 export const {
     addToCart,
+    hydrateCart,
     removeFromCart,
     increaseQuantity,
     decreaseQuantity,

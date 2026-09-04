@@ -9,6 +9,9 @@ const wishlistSlice = createSlice({
     initialState,
 
     reducers: {
+        hydrateWishlist: (state, action) => {
+            state.items = Array.isArray(action.payload) ? action.payload : []
+        },
         addToWishlist: (state, action) => {
             const product = action.payload
 
@@ -53,6 +56,7 @@ export const {
     addToWishlist,
     removeFromWishlist,
     toggleWishlist,
+    hydrateWishlist,
     clearWishlist
 } = wishlistSlice.actions
 

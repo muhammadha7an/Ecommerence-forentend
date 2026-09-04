@@ -103,6 +103,14 @@ const logout = () => {
   localStorage.removeItem("user");
 };
 
+const getOrders = async () => {
+  const response = await axios.get(`${API_BASE_URL}/api/orders`, {
+    headers: authHeaders(),
+  });
+
+  return response.data;
+};
+
 const authService = {
   signup,
   login,
@@ -112,6 +120,7 @@ const authService = {
   forgotPassword,
   resetPassword,
   logout,
+  getOrders,
 };
 
 export default authService;

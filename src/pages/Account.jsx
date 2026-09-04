@@ -1,17 +1,22 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import authService from "../services/authService";
+import { useSelector } from "react-redux";
  
 
 function Account() {
     const navigate = useNavigate();
 
     const [user, setUser] = useState(null);
+    const [orders, setOrders] = useState([]);
+    const cartItems = useSelector((state) => state.cart.items);
+    const wishlistItems = useSelector((state) => state.wishlist.items);
 
     const [profile, setProfile] = useState({
         name: "",
         email: "",
     });
+    const [address, setAddress] = useState({ street: "", city: "", postalCode: "", phone: "" });
 
     const [passwordData, setPasswordData] = useState({
         currentPassword: "",
@@ -33,13 +38,16 @@ function Account() {
         const loadUser = async () => {
             try {
                 const data = await authService.getMe();
+                const ordersData = await authService.getOrders();
 
                 setUser(data.user);
+                setOrders(ordersData.orders || []);
 
                 setProfile({
                     name: data.user.name,
                     email: data.user.email,
                 });
+                setAddress(data.user.address || { street: "", city: "", postalCode: "", phone: "" });
             } catch {
                 localStorage.removeItem("token");
                 localStorage.removeItem("user");
@@ -69,6 +77,10 @@ function Account() {
         });
     };
 
+    const handleAddressChange = (e) => {
+        setAddress({ ...address, [e.target.name]: e.target.value });
+    };
+
     // Update Profile
     const handleProfileSubmit = async (e) => {
         e.preventDefault();
@@ -78,7 +90,7 @@ function Account() {
         setProfileLoading(true);
 
         try {
-            const data = await authService.updateProfile(profile);
+            const data = await authService.updateProfile({ ...profile, address });
 
             setUser(data.user);
             setProfileMessage(data.message || "Profile updated successfully!");
@@ -92,6 +104,9 @@ function Account() {
             setProfileLoading(false);
         }
     };
+
+    const savedAddress = user?.address || address;
+    const totalSpent = orders.reduce((total, order) => total + (order.totalAmount || 0), 0) / 100;
 
     // Change Password
     const handlePasswordSubmit = async (e) => {
@@ -150,6 +165,42 @@ function Account() {
                     </div>
                 </div>
 
+                <div className="account-stats-grid">
+                    <div className="account-stat"><strong>{orders.length}</strong><span>Total orders</span></div>
+                    <div className="account-stat"><strong>${totalSpent.toFixed(2)}</strong><span>Total spent</span></div>
+                    <div className="account-stat"><strong>{cartItems.length}</strong><span>Cart products</span></div>
+                    <div className="account-stat"><strong>{wishlistItems.length}</strong><span>Wishlist products</span></div>
+                </div>
+
+                <section className="account-section">
+                    <div className="section-header">
+                        <h2>Recent Orders</h2>
+                        <p>Your orders are visible only to your account.</p>
+                    </div>
+                    {orders.length === 0 ? <p className="account-muted">No orders yet.</p> : (
+                        <div className="orders-list">
+                            {orders.map((order) => (
+                                <article className="order-row" key={order._id}>
+                                    <div><strong>#{String(order._id).slice(-8)}</strong><span>{new Date(order.createdAt).toLocaleDateString()}</span></div>
+                                    <div><strong>${((order.totalAmount || 0) / 100).toFixed(2)}</strong><span>{order.paymentStatus} · {order.orderStatus}</span></div>
+                                    <span>{order.items?.length || 0} product(s)</span>
+                                </article>
+                            ))}
+                        </div>
+                    )}
+                </section>
+
+                <section className="account-section account-two-column">
+                    <div>
+                        <div className="section-header"><h2>Saved Address</h2><p>Used for future checkout details.</p></div>
+                        <p>{savedAddress.street || "No street saved"}</p><p>{savedAddress.city || "No city saved"} {savedAddress.postalCode}</p><p>{savedAddress.phone || "No phone saved"}</p>
+                    </div>
+                    <div>
+                        <div className="section-header"><h2>Current Cart</h2><p>{cartItems.length} product(s) saved for this account.</p></div>
+                        {cartItems.map((item) => <p key={item.id}>{item.name} x {item.quantity}</p>)}
+                    </div>
+                </section>
+
                 {/* Profile Information Section */}
                 <section className="account-section">
                     <div className="section-header">
@@ -181,6 +232,23 @@ function Account() {
                                 placeholder="Enter your full name"
                                 required
                             />
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="street">Street Address</label>
+                            <input id="street" name="street" value={address.street} onChange={handleAddressChange} placeholder="Street address" />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="city">City</label>
+                            <input id="city" name="city" value={address.city} onChange={handleAddressChange} placeholder="City" />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="postalCode">Postal Code</label>
+                            <input id="postalCode" name="postalCode" value={address.postalCode} onChange={handleAddressChange} placeholder="Postal code" />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="phone">Phone</label>
+                            <input id="phone" name="phone" value={address.phone} onChange={handleAddressChange} placeholder="Phone" />
                         </div>
 
                         <div className="form-group">

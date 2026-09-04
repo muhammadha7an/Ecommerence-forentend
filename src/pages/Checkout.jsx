@@ -41,12 +41,13 @@ export default function Checkout() {
             const response = await fetch(`${API_BASE_URL}/api/create-checkout-session`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
                 },
                 body: JSON.stringify({
                     items: cartItems,
                     shippingDetails: shippingInfo,
-                    origin: window.location.origin
+                    origin: window.location.origin,
                 })
             })
 
