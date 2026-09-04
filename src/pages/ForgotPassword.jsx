@@ -1,7 +1,7 @@
+```jsx
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import authService from "../services/authService";
- 
 
 function ForgotPassword() {
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ function ForgotPassword() {
     setMessage("");
     setError("");
 
-    if (!email) {
+    if (!email.trim()) {
       setError("Please enter your email address");
       return;
     }
@@ -25,11 +25,11 @@ function ForgotPassword() {
     setLoading(true);
 
     try {
-      const data = await authService.forgotPassword(email);
+      const data = await authService.forgotPassword(email.trim());
 
+      // User exists
       setMessage(
-        data.message ||
-          "Password reset link has been sent to your email"
+        data.message || "Password reset link has been sent to your email"
       );
 
       setEmail("");
@@ -38,6 +38,7 @@ function ForgotPassword() {
         navigate("/login");
       }, 2000);
     } catch (err) {
+      // Backend response
       setError(
         err.response?.data?.message ||
           "Unable to process password reset request"
@@ -50,32 +51,35 @@ function ForgotPassword() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        {/* Header */}
+
         <div className="auth-header">
           <h1>Forgot Password</h1>
+
           <p>
             Enter your email address and we'll send you a link to reset
             your password.
           </p>
         </div>
 
-        {/* Alert Banners */}
+        {/* Success Message */}
         {message && (
           <div className="alert-message success-message">
             {message}
           </div>
         )}
 
+        {/* Error Message */}
         {error && (
           <div className="alert-message error-message">
             {error}
           </div>
         )}
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="auth-form">
+
           <div className="form-group">
             <label htmlFor="email">Email Address</label>
+
             <input
               id="email"
               type="email"
@@ -92,11 +96,11 @@ function ForgotPassword() {
             className="btn btn-primary"
             disabled={loading}
           >
-            {loading ? "Sending Link..." : "Send Reset Link"}
+            {loading ? "Checking..." : "Send Reset Link"}
           </button>
+
         </form>
 
-        {/* Footer */}
         <div className="auth-footer">
           <p>
             Remembered your password?{" "}
@@ -105,9 +109,11 @@ function ForgotPassword() {
             </Link>
           </p>
         </div>
+
       </div>
     </div>
   );
 }
 
 export default ForgotPassword;
+```
