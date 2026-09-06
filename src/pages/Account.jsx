@@ -210,9 +210,62 @@ function Account() {
                         className="dashboard-btn"
                         onClick={() => navigate(user?.role === "admin" ? "/admin/dashboard" : "/dashboard")}
                     >
-                        Dashboard
+                        {user?.role === "admin" ? "Admin Dashboard" : "User Dashboard"}
                     </button>
 
+                </div>
+
+                {/* =========================
+                    ACCOUNT QUICK NAVIGATION
+                ========================== */}
+                <div className="account-quick-nav-grid">
+                    <button
+                        type="button"
+                        className="account-nav-card"
+                        onClick={() => navigate(user?.role === "admin" ? "/admin/dashboard" : "/dashboard")}
+                    >
+                        <span className="nav-card-icon">📊</span>
+                        <div className="nav-card-text">
+                            <strong>{user?.role === "admin" ? "Admin Panel" : "Dashboard"}</strong>
+                            <small>Overview & metrics</small>
+                        </div>
+                    </button>
+
+                    <button
+                        type="button"
+                        className="account-nav-card"
+                        onClick={() => navigate("/dashboard/orders")}
+                    >
+                        <span className="nav-card-icon">📦</span>
+                        <div className="nav-card-text">
+                            <strong>My Orders</strong>
+                            <small>History & tracking</small>
+                        </div>
+                    </button>
+
+                    <button
+                        type="button"
+                        className="account-nav-card"
+                        onClick={() => navigate("/wishlist")}
+                    >
+                        <span className="nav-card-icon">❤️</span>
+                        <div className="nav-card-text">
+                            <strong>Saved Wishlist</strong>
+                            <small>Saved favorite pieces</small>
+                        </div>
+                    </button>
+
+                    <button
+                        type="button"
+                        className="account-nav-card"
+                        onClick={() => navigate("/cart")}
+                    >
+                        <span className="nav-card-icon">🛒</span>
+                        <div className="nav-card-text">
+                            <strong>Shopping Cart</strong>
+                            <small>Review items</small>
+                        </div>
+                    </button>
                 </div>
 
                 {/* =========================

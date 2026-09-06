@@ -1,4 +1,17 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import authService from '../../services/authService'
+
+export const fetchProducts = createAsyncThunk(
+  'products/fetchProducts',
+  async (params, { rejectWithValue }) => {
+    try {
+      const data = await authService.getProducts(params)
+      return data.products || []
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to load products')
+    }
+  }
+)
 
 const initialState = {
   items: [
@@ -94,13 +107,60 @@ const initialState = {
 
 
     
-  ]
+  ],
+  loading: false,
+  error: null,
 }
 
 const productsSlice = createSlice({
   name: 'products',
   initialState,
-  reducers: {}
+  reducers: {
+    addProductLocally: (state, action) => {
+      state.items.unshift(action.payload)
+    },
+    updateProductLocally: (state, action) => {
+      const updated = action.payload
+      const index = state.items.findIndex(
+        (item) => (updated._id && item._id === updated._id) || (updated.id && item.id === updated.id)
+      )
+      if (index !== -1) {
+        state.items[index] = { ...state.items[index], ...updated }
+      }
+    },
+    removeProductLocally: (state, action) => {
+      const idToRemove = action.payload
+      state.items = state.items.filter(
+        (item) => item._id !== idToRemove && item.id !== idToRemove && item.legacyId !== idToRemove
+      )
+    },
+    setProducts: (state, action) => {
+      state.items = action.payload
+    }
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchProducts.pending, (state) => {
+        state.loading = true
+      })
+      .addCase(fetchProducts.fulfilled, (state, action) => {
+        state.loading = false
+        if (Array.isArray(action.payload) && action.payload.length > 0) {
+          state.items = action.payload
+        }
+      })
+      .addCase(fetchProducts.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload || action.error?.message
+      })
+  }
 })
+
+export const {
+  addProductLocally,
+  updateProductLocally,
+  removeProductLocally,
+  setProducts
+} = productsSlice.actions
 
 export default productsSlice.reducer

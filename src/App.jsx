@@ -23,6 +23,8 @@ import AdminRoute from './components/AdminRoute.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import { hydrateCart } from './redux/slices/cartSlice'
 import { hydrateWishlist } from './redux/slices/wishlistSlice'
+import { fetchProducts } from './redux/slices/productsSlice'
+import { fetchCategories } from './redux/slices/categoriesSlice'
 
 import Home from './pages/Home.jsx'
 import Shop from './pages/Shop.jsx'
@@ -44,7 +46,9 @@ import AdminDashboard from './pages/AdminDashboard.jsx'
 import AdminLogin from './pages/AdminLogin.jsx'
 import AdminUsers from './pages/AdminUsers.jsx'
 import AdminOrders from './pages/AdminOrders.jsx'
-import AdminCatalogPlaceholder from './pages/AdminCatalogPlaceholder.jsx'
+import AdminProducts from './pages/AdminProducts.jsx'
+import AdminProductForm from './pages/AdminProductForm.jsx'
+import AdminCategories from './pages/AdminCategories.jsx'
 
 function UserDataPersistence() {
   const dispatch = useDispatch()
@@ -58,6 +62,12 @@ function UserDataPersistence() {
   const cartKey = `cart:${identity}`
   const wishlistKey = `wishlist:${identity}`
 
+  // Fetch live products and categories from MongoDB on initial mount
+  useEffect(() => {
+    dispatch(fetchProducts())
+    dispatch(fetchCategories())
+  }, [dispatch])
+
   useEffect(() => {
     const previousIdentity = identityRef.current
     const previousCart = previousIdentity
@@ -65,9 +75,10 @@ function UserDataPersistence() {
       : []
     const savedCart = JSON.parse(localStorage.getItem(cartKey) || '[]')
     const savedWishlist = JSON.parse(localStorage.getItem(wishlistKey) || '[]')
-    const nextCart = identity !== 'guest' && previousIdentity === 'guest' && savedCart.length === 0
-      ? previousCart
-      : savedCart
+    const nextCart =
+      identity !== 'guest' && previousIdentity === 'guest' && savedCart.length === 0
+        ? previousCart
+        : savedCart
 
     skipSaveRef.current = true
     dispatch(hydrateCart(nextCart))
@@ -126,12 +137,10 @@ function App() {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
-          <Route path="/admin/products" element={<AdminCatalogPlaceholder resource="Products" />} />
-          <Route path="/admin/products/add" element={<AdminCatalogPlaceholder resource="Products" />} />
-          <Route path="/admin/products/edit/:id" element={<AdminCatalogPlaceholder resource="Products" />} />
-          <Route path="/admin/categories" element={<AdminCatalogPlaceholder resource="Categories" />} />
-          <Route path="/admin/categories/add" element={<AdminCatalogPlaceholder resource="Categories" />} />
-          <Route path="/admin/categories/edit/:id" element={<AdminCatalogPlaceholder resource="Categories" />} />
+          <Route path="/admin/products" element={<AdminProducts />} />
+          <Route path="/admin/products/add" element={<AdminProductForm />} />
+          <Route path="/admin/products/edit/:id" element={<AdminProductForm />} />
+          <Route path="/admin/categories" element={<AdminCategories />} />
         </Route>
       </Routes>
     </BrowserRouter>

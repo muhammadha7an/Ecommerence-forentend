@@ -1,13 +1,17 @@
 import { Link } from 'react-router-dom';
+import { getImageUrl } from '../services/api';
 
 export default function CategoryCard({ category }) {
-  // Default image if category.image is not provided in redux state
-  const defaultImage = 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80&w=600';
+  const defaultImage =
+    'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80&w=600';
+
+  const categoryTarget = category.id || category.legacyId || category.name || category._id;
+  const imageSrc = category.image ? getImageUrl(category.image) : defaultImage;
 
   return (
-    <Link to={`/shop?category=${category.id}`} className="category-card">
+    <Link to={`/shop?category=${encodeURIComponent(categoryTarget)}`} className="category-card">
       <div className="category-image-wrapper">
-        <img src={category.image || defaultImage} alt={category.name} />
+        <img src={imageSrc} alt={category.name} loading="lazy" />
         <div className="category-overlay" />
       </div>
       <div className="category-content">
