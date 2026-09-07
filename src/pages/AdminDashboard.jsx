@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import authService from "../services/authService";
 
-import '../style/AdminDashboard.module.css'
+import '../style/AdminDashboard.module.css';
 
 const money = (amount) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
