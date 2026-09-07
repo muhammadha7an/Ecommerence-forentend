@@ -207,7 +207,7 @@ function Account() {
                     {/* Dashboard Button */}
                     <button
                         type="button"
-                        className="dashboard-btn"
+                        className="btn btn-primary  dashboard-btn"
                         onClick={() => navigate(user?.role === "admin" ? "/admin/dashboard" : "/dashboard")}
                     >
                         {user?.role === "admin" ? "Admin Dashboard" : "User Dashboard"}
