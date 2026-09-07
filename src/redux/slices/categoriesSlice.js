@@ -14,14 +14,7 @@ export const fetchCategories = createAsyncThunk(
 )
 
 const initialState = {
-  items: [
-    { id: 1, name: 'Everyday Essentials', image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=600' },
-    { id: 2, name: 'Home Accents', image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80&w=600' },
-    { id: 3, name: 'Accessories', image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&q=80&w=600' },
-    { id: 4, name: 'Stationery & Office', image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&q=80&w=600' },
-    { id: 5, name: 'Kitchen & Dining', image: 'https://images.unsplash.com/photo-1610557892470-55d9e80c0bce?auto=format&fit=crop&q=80&w=600' },
-    { id: 6, name: 'Self Care & Wellness', image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=80&w=600' }
-  ],
+  items: [],
   loading: false,
   error: null,
 }
@@ -59,9 +52,7 @@ const categoriesSlice = createSlice({
       })
       .addCase(fetchCategories.fulfilled, (state, action) => {
         state.loading = false
-        if (Array.isArray(action.payload) && action.payload.length > 0) {
-          state.items = action.payload
-        }
+        state.items = Array.isArray(action.payload) ? action.payload : []
       })
       .addCase(fetchCategories.rejected, (state, action) => {
         state.loading = false

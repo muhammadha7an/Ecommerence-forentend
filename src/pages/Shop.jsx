@@ -11,6 +11,8 @@ export default function Shop() {
   // Redux store data
   const products = useSelector((state) => state.products.items) ?? emptyList;
   const categories = useSelector((state) => state.categories.items) ?? emptyList;
+  const categoriesLoading = useSelector((state) => state.categories.loading);
+  const categoriesError = useSelector((state) => state.categories.error);
 
   // Filter States
   const categoryParam = searchParams.get('category') || 'all';
@@ -70,15 +72,41 @@ export default function Shop() {
     setCurrentPage(1);
   };
 
+  const selectedCategoryRecord = useMemo(() => {
+    if (selectedCategory === 'all') return null;
+
+    return categories.find((category) => (
+      [category.id, category._id, category.legacyId, category.name, category.slug]
+        .filter((value) => value !== undefined && value !== null)
+        .some((value) => String(value) === String(selectedCategory))
+    )) || null;
+  }, [categories, selectedCategory]);
+
+  const categoryMatchesProduct = (product, category) => {
+    if (!category) return false;
+
+    const categoryValues = [
+      category.id,
+      category._id,
+      category.legacyId,
+      category.name,
+      category.slug,
+    ]
+      .filter((value) => value !== undefined && value !== null)
+      .map((value) => String(value).toLowerCase());
+
+    return [product.categoryId, product.category]
+      .filter((value) => value !== undefined && value !== null)
+      .some((value) => categoryValues.includes(String(value).toLowerCase()));
+  };
+
   // Filter & Sort Logic
   const filteredProducts = useMemo(() => {
     return products
       .filter((product) => {
         // Category Filter (Handles both string and numeric IDs)
-        const matchesCategory =
-          selectedCategory === 'all' ||
-          String(product.categoryId) === String(selectedCategory) ||
-          String(product.category) === String(selectedCategory);
+        const matchesCategory = selectedCategory === 'all'
+          || categoryMatchesProduct(product, selectedCategoryRecord);
 
         // Search Keyword Filter
         const matchesSearch =
@@ -101,7 +129,7 @@ export default function Shop() {
         if (sortBy === 'newest') return (b.id || 0) - (a.id || 0);
         return 0; // Default / Featured
       });
-  }, [products, selectedCategory, searchTerm, priceRange, inStockOnly, sortBy]);
+  }, [products, selectedCategory, selectedCategoryRecord, searchTerm, priceRange, inStockOnly, sortBy]);
 
   // Pagination Logic
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
@@ -131,15 +159,19 @@ export default function Shop() {
             >
               All Items
             </button>
-            {categories.map((cat) => (
+            {categories.map((cat) => {
+              const categoryValue = cat.id || cat._id || cat.legacyId || cat.name;
+
+              return (
               <button
-                key={cat.id}
-                className={`pill ${String(selectedCategory) === String(cat.id) ? 'active' : ''}`}
-                onClick={() => handleCategoryChange(cat.id)}
+                key={categoryValue}
+                className={`pill ${String(selectedCategory) === String(categoryValue) ? 'active' : ''}`}
+                onClick={() => handleCategoryChange(categoryValue)}
               >
                 {cat.name}
               </button>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -196,16 +228,22 @@ export default function Shop() {
                   <span className="count">{products.length}</span>
                 </button>
               </li>
-              {categories.map((cat) => {
-                const count = products.filter(
-                  (p) => String(p.categoryId) === String(cat.id) || String(p.category) === String(cat.id)
-                ).length;
+              {categoriesLoading && <li className="category-list-message">Loading categories...</li>}
+              {!categoriesLoading && categoriesError && (
+                <li className="category-list-message">Unable to load categories.</li>
+              )}
+              {!categoriesLoading && !categoriesError && categories.length === 0 && (
+                <li className="category-list-message">No categories available.</li>
+              )}
+              {!categoriesLoading && !categoriesError && categories.map((cat) => {
+                const categoryValue = cat.id || cat._id || cat.legacyId || cat.name;
+                const count = products.filter((product) => categoryMatchesProduct(product, cat)).length;
 
                 return (
-                  <li key={cat.id}>
+                  <li key={categoryValue}>
                     <button
-                      className={String(selectedCategory) === String(cat.id) ? 'active' : ''}
-                      onClick={() => handleCategoryChange(cat.id)}
+                      className={String(selectedCategory) === String(categoryValue) ? 'active' : ''}
+                      onClick={() => handleCategoryChange(categoryValue)}
                     >
                       <span>{cat.name}</span>
                       <span className="count">{count}</span>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination } from 'swiper/modules';
 import { addToCart } from '../redux/slices/cartSlice';
@@ -17,6 +17,7 @@ const productIdFor = (product) => product?._id || product?.id || product?.legacy
 
 function ProductDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const catalog = useSelector((state) => state.products.items || []);
   const wishlistItems = useSelector((state) => state.wishlist.items || []);
@@ -89,6 +90,7 @@ function ProductDetails() {
 
   const handleAddToCart = () => {
     for (let index = 0; index < quantity; index += 1) dispatch(addToCart(product));
+    navigate('/cart');
   };
 
   return (
