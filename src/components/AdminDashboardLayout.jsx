@@ -199,7 +199,7 @@ function AdminDashboardLayout() {
           </div>
         </header>
 
-        <main className={styles.contentBody}>
+        <main className={`${styles.contentBody} admin-dashboard-scope`}>
           <Outlet />
         </main>
       </div>

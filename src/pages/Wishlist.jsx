@@ -5,6 +5,7 @@ import {
   clearWishlist
 } from '../redux/slices/wishlistSlice'
 import { addToCart } from '../redux/slices/cartSlice'
+import { getImageUrl } from '../services/api'
 
 import ProductCard from '../components/ProductCard'
  
@@ -171,12 +172,14 @@ export default function Wishlist() {
           {wishlistItems.map((product) => (
             <article className="wl-card" key={product.id}>
               <div className="wl-card-image-wrapper">
-                <img 
-                  src={product.image} 
-                  alt={product.name} 
-                  loading="lazy" 
-                  className="wl-card-img"
-                />
+                <Link to={`/product/${product.id || product._id || product.legacyId}`} aria-label={`View ${product.name}`}>
+                  <img
+                    src={getImageUrl(product.image)}
+                    alt={product.name}
+                    loading="lazy"
+                    className="wl-card-img"
+                  />
+                </Link>
                 <span className="wl-stock-badge">In Stock</span>
                 <button
                   className="wl-remove-btn"
@@ -203,7 +206,9 @@ export default function Wishlist() {
                 <span className="wl-category-tag">
                   {product.category || 'General'}
                 </span>
-                <h3 className="wl-product-title">{product.name}</h3>
+                <h3 className="wl-product-title">
+                  <Link to={`/product/${product.id || product._id || product.legacyId}`}>{product.name}</Link>
+                </h3>
                 <div className="wl-price-row">
                   <span className="wl-current-price">
                     ${product.price ? product.price.toFixed(2) : '0.00'}

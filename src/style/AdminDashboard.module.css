@@ -4,8 +4,8 @@
 
 .dashboardPage {
   min-height: 100%;
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: #f4f6f5;
+  color: #1e2925;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   box-sizing: border-box;
 }
@@ -28,7 +28,7 @@
   height: 40px;
   border: 3px solid #e2e8f0;
   border-radius: 50%;
-  border-top-color: #4f46e5;
+  border-top-color: #b35436;
   animation: spin 0.8s linear infinite;
   margin-bottom: 1rem;
 }
@@ -69,15 +69,15 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #4f46e5;
+  color: #b35436;
   display: block;
   margin-bottom: 0.25rem;
 }
 
 .title {
   font-size: 1.75rem;
-  font-weight: 800;
-  color: #0f172a;
+  font-weight: 500;
+  color: #1e2925;
   margin: 0 0 0.25rem 0;
   letter-spacing: -0.02em;
 }
@@ -126,16 +126,16 @@
 /* Primary Button */
 
 .primaryBtn {
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  background: #b35436;
   color: #ffffff;
   border: none;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 4px 12px rgba(179, 84, 54, 0.22);
 }
 
 .primaryBtn:hover {
-  opacity: 0.95;
+  background: #933e25;
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 6px 16px rgba(179, 84, 54, 0.28);
 }
 
 /* Outline Button */
@@ -226,7 +226,7 @@
 .statCard {
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;

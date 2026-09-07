@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import { addToCart } from '../redux/slices/cartSlice';
 import { toggleWishlist } from '../redux/slices/wishlistSlice';
 import { getImageUrl } from '../services/api';
@@ -25,6 +26,7 @@ export default function ProductCard({ product }) {
   };
 
   const imageUrl = getImageUrl(product.image);
+  const productId = product.id || product._id || product.legacyId;
 
   return (
     <article className="product-card">
@@ -48,17 +50,21 @@ export default function ProductCard({ product }) {
           </svg>
         </button>
 
-        <img
-          src={imageUrl}
-          alt={product.name}
-          className="product-img"
-          loading="lazy"
-        />
+        <Link to={`/product/${productId}`} className="product-card-link" aria-label={`View ${product.name}`}>
+          <img
+            src={imageUrl}
+            alt={product.name}
+            className="product-img"
+            loading="lazy"
+          />
+        </Link>
       </div>
 
       <div className="product-info">
         <span className="product-meta">{product.category || 'Essential'}</span>
-        <h3 className="product-name">{product.name}</h3>
+        <h3 className="product-name">
+          <Link to={`/product/${productId}`}>{product.name}</Link>
+        </h3>
 
         <div className="product-action-row">
           <span className="product-price">

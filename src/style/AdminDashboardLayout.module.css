@@ -5,10 +5,17 @@
 .shell {
   display: flex;
   min-height: 100vh;
-  background-color: #f8fafc; /* Clean Light Gray */
-  color: #0f172a; /* Slate Dark Text */
+  background-color: #f4f6f5;
+  color: #1e2925;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   box-sizing: border-box;
+  --admin-ink: #1e2925;
+  --admin-muted: #68766f;
+  --admin-accent: #b35436;
+  --admin-accent-dark: #933e25;
+  --admin-border: #dce4df;
+  --admin-surface: #ffffff;
+  --admin-surface-muted: #eef2ef;
 }
 
 /* =========================================

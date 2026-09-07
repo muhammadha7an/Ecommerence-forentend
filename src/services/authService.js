@@ -3,16 +3,12 @@ import { API_BASE_URL } from "./api";
 
 const API_URL = `${API_BASE_URL}/api/auth`;
 
-const authHeaders = (isMultipart = false) => {
+const authHeaders = () => {
   const token = localStorage.getItem("token");
   const headers = {};
 
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
-  }
-
-  if (isMultipart) {
-    headers["Content-Type"] = "multipart/form-data";
   }
 
   return headers;
@@ -174,7 +170,7 @@ const deleteCategory = async (id) => {
 // Image Upload API
 const uploadImage = async (formData) => {
   const response = await axios.post(`${API_BASE_URL}/api/upload`, formData, {
-    headers: authHeaders(true),
+    headers: authHeaders(),
   });
   return response.data;
 };

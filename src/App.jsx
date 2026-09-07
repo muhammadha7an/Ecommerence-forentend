@@ -11,6 +11,7 @@ import './style/checkout.css'
 import './style/success.css'
 import './style/account.css'
 import './style/dashboard.css'
+import './style/admin-theme.css'
 
 import { useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -30,6 +31,7 @@ import Home from './pages/Home.jsx'
 import Shop from './pages/Shop.jsx'
 import Cart from './pages/Cart.jsx'
 import Wishlist from './pages/Wishlist.jsx'
+import ProductDetails from './pages/ProductDetails.jsx'
 import Checkout from './pages/Checkout.jsx'
 import About from './pages/About.jsx'
 import Contact from './pages/Contact.jsx'
@@ -115,6 +117,7 @@ function App() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/success" element={<Success />} />
