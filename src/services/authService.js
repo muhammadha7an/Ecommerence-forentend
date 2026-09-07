@@ -194,6 +194,19 @@ const getAdminAnalytics = async () => {
   return response.data;
 };
 
+
+const getAdminDailyEarnings = async (days = 7) => {
+  const response = await axios.get(
+    `${API_BASE_URL}/api/admin/daily-earnings`,
+    {
+      headers: authHeaders(),
+      params: { days },
+    }
+  );
+
+  return response.data;
+};
+
 // Admin Users Management
 const getAdminUsers = async (search = "") => {
   const response = await axios.get(`${API_BASE_URL}/api/admin/users`, {
@@ -269,6 +282,7 @@ const authService = {
   uploadImage,
   getAdminOverview,
   getAdminAnalytics,
+  getAdminDailyEarnings,
   getAdminUsers,
   updateUserRole,
   deleteUser,
