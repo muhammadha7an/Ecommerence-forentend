@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { NavLink, Outlet, useNavigate, Link } from "react-router-dom";
 import authService from "../services/authService";
-import styles from "../style/AdminDashboardLayout.module.css";
+
+import '../style/AdminDashboardLayout.module.css'
 
 function AdminDashboardLayout() {
   const [isOpen, setIsOpen] = useState(false);
