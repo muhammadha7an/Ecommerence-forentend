@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import authService from "../services/authService";
-import styles from '../style/AdminDashboard.module.css';
+import styles from "../style/AdminDashboard.module.css";
 
 const money = (amount) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
@@ -18,6 +18,10 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [updatingId, setUpdatingId] = useState(null);
+
+  // --- Graph Date Range & Hover Tooltip State ---
+  const [rangeDays, setRangeDays] = useState(7); // Default: Last 7 Days
+  const [hoveredPoint, setHoveredPoint] = useState(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -65,23 +69,23 @@ function AdminDashboard() {
     }
   };
 
-  // --- DAILY REVENUE TIMELINE LOGIC (LAST 7 DAYS) ---
+  // --- Dynamic Timeline Data Generator ---
   const dailyTimeline = useMemo(() => {
     const rawTimeline = analytics?.timeline || [];
-    const DAYS_TO_SHOW = 7; // آخری 7 دن دکھانے کے لیے
     const result = [];
     const today = new Date();
 
-    for (let i = DAYS_TO_SHOW - 1; i >= 0; i--) {
+    for (let i = rangeDays - 1; i >= 0; i--) {
       const date = new Date();
       date.setDate(today.getDate() - i);
 
-      // YYYY-MM-DD فارمیٹ ڈیٹ میچنگ کے لیے
-      const dateKey = date.toISOString().split("T")[0]; 
-      // سکرین پر دکھانے کے لیے شارٹ فارمیٹ (e.g. "Oct 12" یا "Mon")
-      const label = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      // Match YYYY-MM-DD
+      const dateKey = date.toISOString().split("T")[0];
+      const displayLabel = date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
 
-      // Backend response کے ساتھ میچ کریں
       const matchedItem = rawTimeline.find(
         (item) =>
           item.period === dateKey ||
@@ -90,16 +94,32 @@ function AdminDashboard() {
       );
 
       result.push({
-        period: label,
+        fullDate: date.toLocaleDateString("en-US", {
+          weekday: "short",
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
+        period: displayLabel,
         revenue: matchedItem ? matchedItem.revenue || 0 : 0,
       });
     }
 
-    // اگر Backend پہلے ہی Daily array بھیج رہا ہو تو Fallback رکھیں
-    return rawTimeline.length > 0 && !result.some((r) => r.revenue > 0)
-      ? rawTimeline.slice(-7)
-      : result;
-  }, [analytics]);
+    return result;
+  }, [analytics, rangeDays]);
+
+  // --- Active Date Text Badge (e.g., Sep 1, 2026 - Sep 7, 2026) ---
+  const activeDateRangeText = useMemo(() => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - (rangeDays - 1));
+
+    const options = { month: "short", day: "numeric", year: "numeric" };
+    return `${start.toLocaleDateString("en-US", options)} - ${end.toLocaleDateString(
+      "en-US",
+      options
+    )}`;
+  }, [rangeDays]);
 
   if (loading) {
     return (
@@ -112,14 +132,12 @@ function AdminDashboard() {
     );
   }
 
-  // --- SVG Revenue Chart Calculations ---
+  // --- Dynamic SVG Graph Calculations ---
   const maxRevenue = Math.max(...dailyTimeline.map((t) => t.revenue || 0), 100);
-
-  // SVG Chart ViewBox Dimensions
-  const chartWidth = 700;
-  const chartHeight = 220;
-  const paddingX = 45;
-  const paddingY = 35;
+  const chartWidth = 750;
+  const chartHeight = 250;
+  const paddingX = 50;
+  const paddingY = 40;
 
   const chartPoints = dailyTimeline.map((item, index) => {
     const x =
@@ -129,7 +147,7 @@ function AdminDashboard() {
       chartHeight -
       paddingY -
       ((item.revenue || 0) / maxRevenue) * (chartHeight - paddingY * 2);
-    return { x, y, period: item.period, revenue: item.revenue || 0 };
+    return { x, y, ...item };
   });
 
   const linePathD =
@@ -154,7 +172,7 @@ function AdminDashboard() {
   return (
     <div className={styles.dashboardPage}>
       <div className={styles.container}>
-        {/* Header */}
+        {/* Top Header */}
         <div className={styles.header}>
           <div>
             <span className={styles.welcomeBadge}>Store Control Center</span>
@@ -185,49 +203,19 @@ function AdminDashboard() {
 
         {error && <div className={styles.errorBanner}>{error}</div>}
 
-        {/* Low Stock Notification */}
-        {stats?.lowStockCount > 0 && (
-          <div className={styles.alertBanner}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-            <div className={styles.alertContent}>
-              <strong>Inventory Notice:</strong> {stats.lowStockCount} product(s) have 5 or fewer items remaining in stock.
-            </div>
-            <Link to="/admin/products" className={styles.alertAction}>
-              Review Stock
-            </Link>
-          </div>
-        )}
-
-        {/* KPI CARDS GRID */}
+        {/* KPI CARDS */}
         <div className={styles.statsGrid}>
-          {/* Revenue */}
           <div className={`${styles.statCard} ${styles.statCardHighlight}`}>
             <div className={styles.statHeader}>
               <span>Total Revenue</span>
-              <div className={styles.statIconBadge}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="12" y1="1" x2="12" y2="23" />
-                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                </svg>
-              </div>
             </div>
             <strong className={styles.statValue}>{money(stats?.totalEarnings)}</strong>
-            <small className={styles.statCaption}>From verified checkouts</small>
+            <small className={styles.statCaption}>Overall store earnings</small>
           </div>
 
-          {/* Total Orders */}
           <div className={styles.statCard}>
             <div className={styles.statHeader}>
               <span>Total Orders</span>
-              <div className={styles.statIconBadge}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                </svg>
-              </div>
             </div>
             <strong className={styles.statValue}>{stats?.totalOrders ?? 0}</strong>
             <small className={styles.statCaption}>
@@ -235,235 +223,172 @@ function AdminDashboard() {
             </small>
           </div>
 
-          {/* Completed Orders */}
-          <div className={styles.statCard}>
-            <div className={styles.statHeader}>
-              <span>Completed Orders</span>
-              <div className={styles.statIconBadge}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                  <polyline points="22 4 12 14.01 9 11.01" />
-                </svg>
-              </div>
-            </div>
-            <strong className={styles.statValue}>{stats?.completedOrders ?? 0}</strong>
-            <small className={styles.statCaption}>Delivered successfully</small>
-          </div>
-
-          {/* Total Products */}
           <div className={styles.statCard}>
             <div className={styles.statHeader}>
               <span>Total Products</span>
-              <div className={styles.statIconBadge}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-                  <line x1="7" y1="7" x2="7.01" y2="7" />
-                </svg>
-              </div>
             </div>
             <strong className={styles.statValue}>{stats?.totalProducts ?? 0}</strong>
-            <small className={styles.statCaption}>
-              <Link to="/admin/products">Manage catalog →</Link>
-            </small>
+            <small className={styles.statCaption}>Active in inventory</small>
           </div>
 
-          {/* Categories */}
-          <div className={styles.statCard}>
-            <div className={styles.statHeader}>
-              <span>Categories</span>
-              <div className={styles.statIconBadge}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                </svg>
-              </div>
-            </div>
-            <strong className={styles.statValue}>{stats?.totalCategories ?? 0}</strong>
-            <small className={styles.statCaption}>
-              <Link to="/admin/categories">Manage groups →</Link>
-            </small>
-          </div>
-
-          {/* Total Users */}
           <div className={styles.statCard}>
             <div className={styles.statHeader}>
               <span>Total Users</span>
-              <div className={styles.statIconBadge}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-              </div>
             </div>
             <strong className={styles.statValue}>{stats?.totalUsers ?? 0}</strong>
-            <small className={styles.statCaption}>
-              <Link to="/admin/users">View customers →</Link>
-            </small>
+            <small className={styles.statCaption}>Registered accounts</small>
           </div>
         </div>
 
-        {/* CHARTS SECTION */}
+        {/* --- DYNAMIC REVENUE GRAPH SECTION --- */}
         <div className={styles.chartsGrid}>
-          {/* Revenue Over Time Area Chart */}
-          <div className={styles.chartPanel}>
-            <div className={styles.panelHeader}>
+          <div className={styles.chartPanel} style={{ position: "relative" }}>
+            <div className={styles.panelHeader} style={{ flexWrap: "wrap", gap: "12px" }}>
               <div>
-                <h2>Daily Revenue (Last 7 Days)</h2>
-                <p>Daily earnings breakdown from completed checkouts</p>
+                <h2>Daily Earnings Trend</h2>
+                <span className={styles.activeDateRange}>{activeDateRangeText}</span>
               </div>
-              <span className={styles.liveBadge}>
-                <span className={styles.pulseDot}></span>
-                Live Daily
-              </span>
-            </div>
 
-            {dailyTimeline.length === 0 ? (
-              <div className={styles.chartEmpty}>
-                <p>No historical transactions recorded yet.</p>
-              </div>
-            ) : (
-              <div className={styles.svgChartContainer}>
-                <svg
-                  className={styles.revenueSvg}
-                  viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-                  preserveAspectRatio="none"
-                >
-                  <defs>
-                    <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#6366f1" stopOpacity="0.4" />
-                      <stop offset="100%" stopColor="#6366f1" stopOpacity="0.0" />
-                    </linearGradient>
-                  </defs>
-
-                  {/* Horizontal Grid lines */}
-                  <line
-                    x1={paddingX}
-                    y1={paddingY}
-                    x2={chartWidth - paddingX}
-                    y2={paddingY}
-                    className={styles.gridLine}
-                  />
-                  <line
-                    x1={paddingX}
-                    y1={(chartHeight - paddingY) / 2 + paddingY / 2}
-                    x2={chartWidth - paddingX}
-                    y2={(chartHeight - paddingY) / 2 + paddingY / 2}
-                    className={styles.gridLine}
-                  />
-                  <line
-                    x1={paddingX}
-                    y1={chartHeight - paddingY}
-                    x2={chartWidth - paddingX}
-                    y2={chartHeight - paddingY}
-                    className={styles.baseLine}
-                  />
-
-                  {/* Area Gradient Fill */}
-                  <path d={areaPathD} fill="url(#revenueGrad)" />
-
-                  {/* Top Curve Line */}
-                  <path
-                    d={linePathD}
-                    fill="none"
-                    stroke="#818cf8"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-
-                  {/* Data Points & Dynamic Tooltip Labels */}
-                  {chartPoints.map((pt) => (
-                    <g key={pt.period} className={styles.chartPointGroup}>
-                      {/* Vertical Guideline */}
-                      <line
-                        x1={pt.x}
-                        y1={pt.y}
-                        x2={pt.x}
-                        y2={chartHeight - paddingY}
-                        className={styles.pointGuide}
-                      />
-                      {/* Circle Indicator */}
-                      <circle
-                        cx={pt.x}
-                        cy={pt.y}
-                        r="5"
-                        className={styles.chartCircle}
-                      />
-                      {/* Formatted Price Label */}
-                      <text
-                        x={pt.x}
-                        y={pt.y - 12}
-                        textAnchor="middle"
-                        className={styles.chartValueText}
-                      >
-                        {money(pt.revenue)}
-                      </text>
-                      {/* Time Period Label */}
-                      <text
-                        x={pt.x}
-                        y={chartHeight - 10}
-                        textAnchor="middle"
-                        className={styles.chartLabelText}
-                      >
-                        {pt.period}
-                      </text>
-                    </g>
-                  ))}
-                </svg>
-              </div>
-            )}
-          </div>
-
-          {/* Order Status Breakdown */}
-          <div className={styles.chartPanel}>
-            <div className={styles.panelHeader}>
-              <div>
-                <h2>Fulfillment Distribution</h2>
-                <p>Status summary across all store orders</p>
-              </div>
-            </div>
-
-            <div className={styles.statusBarsList}>
-              {statusBreakdown.length === 0 ? (
-                <p className={styles.chartEmptyText}>No orders placed yet.</p>
-              ) : (
-                statusBreakdown.map((item) => {
-                  const pct = Math.round((item.count / totalStatusCount) * 100);
-                  const statusKey = (item.status || "pending").toLowerCase();
-
-                  return (
-                    <div className={styles.statusBarItem} key={statusKey}>
-                      <div className={styles.statusLabelRow}>
-                        <span className={`${styles.statusBadge} ${styles[statusKey]}`}>
-                          {item.status || "pending"}
-                        </span>
-                        <span className={styles.statusCount}>
-                          <strong>{item.count} orders</strong> ({pct}%)
-                        </span>
-                      </div>
-                      <div className={styles.statusTrack}>
-                        <div
-                          className={`${styles.statusFill} ${styles[statusKey]}`}
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {/* Products by Category Summary */}
-            <div className={styles.categorySummary}>
-              <h3 className={styles.subheading}>Catalog by Category</h3>
-              <div className={styles.categoryWrap}>
-                {(analytics?.productsByCategory || []).map((cat) => (
-                  <span className={styles.catTag} key={cat.category}>
-                    {cat.category}: <strong>{cat.count}</strong>
-                  </span>
+              {/* DATE RANGE FILTER BUTTONS */}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "6px",
+                  background: "#1e293b",
+                  padding: "4px",
+                  borderRadius: "8px",
+                }}
+              >
+                {[7, 15, 30].map((days) => (
+                  <button
+                    key={days}
+                    onClick={() => setRangeDays(days)}
+                    style={{
+                      padding: "6px 12px",
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      borderRadius: "6px",
+                      border: "none",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      background: rangeDays === days ? "#6366f1" : "transparent",
+                      color: rangeDays === days ? "#ffffff" : "#94a3b8",
+                    }}
+                  >
+                    Last {days} Days
+                  </button>
                 ))}
               </div>
+            </div>
+
+            {/* HOVER TOOLTIP CARD */}
+            {hoveredPoint && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "70px",
+                  right: "24px",
+                  background: "rgba(15, 23, 42, 0.95)",
+                  border: "1px solid #6366f1",
+                  padding: "8px 14px",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                  zIndex: 10,
+                  pointerEvents: "none",
+                }}
+              >
+                <p style={{ margin: 0, fontSize: "11px", color: "#94a3b8" }}>
+                  {hoveredPoint.fullDate}
+                </p>
+                <p style={{ margin: "2px 0 0 0", fontSize: "15px", fontWeight: "bold", color: "#38bdf8" }}>
+                  {money(hoveredPoint.revenue)}
+                </p>
+              </div>
+            )}
+
+            {/* SVG CHART CONTAINER */}
+            <div className={styles.svgChartContainer} style={{ marginTop: "15px" }}>
+              <svg
+                className={styles.revenueSvg}
+                viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+                preserveAspectRatio="none"
+                style={{ width: "100%", height: "240px", overflow: "visible" }}
+              >
+                <defs>
+                  <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#6366f1" stopOpacity="0.45" />
+                    <stop offset="100%" stopColor="#6366f1" stopOpacity="0.0" />
+                  </linearGradient>
+                </defs>
+
+                {/* Grid Lines */}
+                <line x1={paddingX} y1={paddingY} x2={chartWidth - paddingX} y2={paddingY} stroke="#334155" strokeDasharray="4" />
+                <line x1={paddingX} y1={(chartHeight - paddingY) / 2 + paddingY / 2} x2={chartWidth - paddingX} y2={(chartHeight - paddingY) / 2 + paddingY / 2} stroke="#334155" strokeDasharray="4" />
+                <line x1={paddingX} y1={chartHeight - paddingY} x2={chartWidth - paddingX} y2={chartHeight - paddingY} stroke="#475569" strokeWidth="1.5" />
+
+                {/* Area & Line */}
+                <path d={areaPathD} fill="url(#revenueGrad)" />
+                <path d={linePathD} fill="none" stroke="#818cf8" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+
+                {/* Data Points & Interactive Nodes */}
+                {chartPoints.map((pt, i) => {
+                  // Hide some text labels if 30 days selected to prevent overlapping
+                  const showLabel = rangeDays === 30 ? i % 3 === 0 : true;
+
+                  return (
+                    <g
+                      key={i}
+                      onMouseEnter={() => setHoveredPoint(pt)}
+                      onMouseLeave={() => setHoveredPoint(null)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {/* Vertical line on hover */}
+                      <line x1={pt.x} y1={pt.y} x2={pt.x} y2={chartHeight - paddingY} stroke="#4f46e5" strokeDasharray="2" strokeWidth="1" />
+
+                      {/* Point Circle */}
+                      <circle cx={pt.x} cy={pt.y} r={hoveredPoint?.period === pt.period ? "7" : "4.5"} fill={hoveredPoint?.period === pt.period ? "#38bdf8" : "#818cf8"} stroke="#0f172a" strokeWidth="2" />
+
+                      {/* Top Price Text (Shows for 7 & 15 days) */}
+                      {rangeDays <= 15 && pt.revenue > 0 && (
+                        <text x={pt.x} y={pt.y - 10} textAnchor="middle" fill="#cbd5e1" fontSize="10px" fontWeight="600">
+                          {money(pt.revenue)}
+                        </text>
+                      )}
+
+                      {/* Bottom Date Label */}
+                      {showLabel && (
+                        <text x={pt.x} y={chartHeight - 12} textAnchor="middle" fill="#94a3b8" fontSize="11px">
+                          {pt.period}
+                        </text>
+                      )}
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+          </div>
+
+          {/* Fulfillment Status */}
+          <div className={styles.chartPanel}>
+            <div className={styles.panelHeader}>
+              <h2>Order Fulfillment</h2>
+            </div>
+            <div className={styles.statusBarsList}>
+              {statusBreakdown.map((item) => {
+                const pct = Math.round((item.count / totalStatusCount) * 100);
+                const statusKey = (item.status || "pending").toLowerCase();
+                return (
+                  <div className={styles.statusBarItem} key={statusKey}>
+                    <div className={styles.statusLabelRow}>
+                      <span className={`${styles.statusBadge} ${styles[statusKey]}`}>{item.status}</span>
+                      <span className={styles.statusCount}><strong>{item.count}</strong> ({pct}%)</span>
+                    </div>
+                    <div className={styles.statusTrack}>
+                      <div className={`${styles.statusFill} ${styles[statusKey]}`} style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -471,94 +396,49 @@ function AdminDashboard() {
         {/* RECENT ORDERS TABLE */}
         <section className={styles.section}>
           <div className={styles.sectionHeading}>
-            <div>
-              <h2>Recent Customer Orders</h2>
-              <p>Quickly inspect or update order shipping status</p>
-            </div>
-
+            <h2>Recent Customer Orders</h2>
             <Link className={styles.secondaryBtn} to="/admin/orders">
               View All Orders →
             </Link>
           </div>
 
-          {recentOrders.length === 0 ? (
-            <div className={styles.panelEmpty}>
-              <p>No customer orders in database yet.</p>
-            </div>
-          ) : (
-            <div className={styles.tableCard}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Order Reference</th>
-                    <th>Customer</th>
-                    <th>Date</th>
-                    <th>Items</th>
-                    <th>Total</th>
-                    <th>Payment</th>
-                    <th>Status Action</th>
+          <div className={styles.tableCard}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Order Reference</th>
+                  <th>Customer</th>
+                  <th>Date</th>
+                  <th>Total</th>
+                  <th>Status Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentOrders.map((order) => (
+                  <tr key={order._id}>
+                    <td><strong>#{String(order._id).slice(-8)}</strong></td>
+                    <td>{order.userId?.name || order.shippingDetails?.fullName || "Customer"}</td>
+                    <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+                    <td><strong>{money(order.totalAmount)}</strong></td>
+                    <td>
+                      <select
+                        className={styles.statusSelect}
+                        value={order.orderStatus || "pending"}
+                        disabled={updatingId === order._id}
+                        onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                      >
+                        {statuses.map((s) => (
+                          <option key={s} value={s}>
+                            {s.charAt(0).toUpperCase() + s.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {recentOrders.map((order) => (
-                    <tr key={order._id}>
-                      <td>
-                        <strong className={styles.orderId}>
-                          #{String(order._id).slice(-8)}
-                        </strong>
-                      </td>
-                      <td>
-                        <div className={styles.customerBox}>
-                          <strong className={styles.customerName}>
-                            {order.userId?.name ||
-                              order.shippingDetails?.fullName ||
-                              "Customer"}
-                          </strong>
-                          <span className={styles.customerEmail}>
-                            {order.userId?.email || order.shippingDetails?.email}
-                          </span>
-                        </div>
-                      </td>
-                      <td className={styles.dateCell}>
-                        {new Date(order.createdAt).toLocaleDateString()}
-                      </td>
-                      <td>{order.items?.length || 0} item(s)</td>
-                      <td>
-                        <strong className={styles.totalAmount}>
-                          {money(order.totalAmount)}
-                        </strong>
-                      </td>
-                      <td>
-                        <span
-                          className={`${styles.paymentPill} ${
-                            styles[order.paymentStatus || "unpaid"]
-                          }`}
-                        >
-                          {order.paymentStatus || "unpaid"}
-                        </span>
-                      </td>
-                      <td>
-                        <select
-                          className={styles.statusSelect}
-                          value={order.orderStatus || "pending"}
-                          disabled={updatingId === order._id}
-                          onChange={(e) =>
-                            handleStatusChange(order._id, e.target.value)
-                          }
-                        >
-                          {statuses.map((s) => (
-                            <option key={s} value={s}>
-                              {s.charAt(0).toUpperCase() + s.slice(1)}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       </div>
     </div>
