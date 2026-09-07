@@ -445,25 +445,7 @@ function AdminDashboard() {
             </small>
           </div>
 
-          <div className="admin-stat-card">
-            <div className="admin-stat-header">
-              <span>
-                Completed Orders
-              </span>
-
-              <span className="stat-icon">
-                ✅
-              </span>
-            </div>
-
-            <strong>
-              {stats?.completedOrders ?? 0}
-            </strong>
-
-            <small>
-              Delivered successfully
-            </small>
-          </div>
+    
 
           <div className="admin-stat-card">
             <div className="admin-stat-header">
@@ -487,27 +469,7 @@ function AdminDashboard() {
             </small>
           </div>
 
-          <div className="admin-stat-card">
-            <div className="admin-stat-header">
-              <span>
-                Categories
-              </span>
-
-              <span className="stat-icon">
-                📁
-              </span>
-            </div>
-
-            <strong>
-              {stats?.totalCategories ?? 0}
-            </strong>
-
-            <small>
-              <Link to="/admin/categories">
-                Manage groups
-              </Link>
-            </small>
-          </div>
+       
 
           <div className="admin-stat-card">
             <div className="admin-stat-header">
