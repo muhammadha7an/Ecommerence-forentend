@@ -1,4 +1,7 @@
-/* Root Layout Shell */
+/* =========================================
+   ROOT LAYOUT
+========================================= */
+
 .shell {
   display: flex;
   min-height: 100vh;
@@ -6,454 +9,539 @@
   color: #f3f4f6;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   box-sizing: border-box;
+}
 
-  /* Mobile Backdrop */
-  .backdrop {
-    position: fixed;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    z-index: 40;
-    border: none;
-    cursor: pointer;
-  }
+/* =========================================
+   MOBILE BACKDROP
+========================================= */
 
-  /* Sidebar Component */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 40;
+  border: none;
+  cursor: pointer;
+}
+
+/* =========================================
+   SIDEBAR
+========================================= */
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 260px;
+  background-color: #111827;
+  border-right: 1px solid #1f2937;
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 1rem;
+  z-index: 50;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+}
+
+.sidebarOpen {
+  transform: translateX(0);
+}
+
+/* =========================================
+   BRAND
+========================================= */
+
+.brandHeader {
+  padding: 0.25rem 0.5rem 1.25rem 0.5rem;
+}
+
+.brandLink {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+
+.brandLogo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+}
+
+.brandName {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #f9fafb;
+  letter-spacing: -0.02em;
+}
+
+.brandTag {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #818cf8;
+  letter-spacing: 0.08em;
+}
+
+/* =========================================
+   USER CARD
+========================================= */
+
+.userCard {
+  background-color: #1f2937;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.avatarWrapper {
+  position: relative;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #374151;
+  color: #e5e7eb;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.statusIndicator {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #10b981;
+  border: 2px solid #1f2937;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.roleBadge {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: #38bdf8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.userName {
+  font-size: 0.85rem;
+  color: #f3f4f6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userEmail {
+  font-size: 0.725rem;
+  color: #9ca3af;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================================
+   NAVIGATION
+========================================= */
+
+.navMenu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  color: #9ca3af;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.navIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  stroke: #9ca3af;
+  transition: stroke 0.15s ease;
+}
+
+.navItem:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  color: #f3f4f6;
+}
+
+.navItem:hover .navIcon {
+  stroke: #f3f4f6;
+}
+
+.navItemActive {
+  background-color: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
+  font-weight: 600;
+}
+
+.navItemActive .navIcon {
+  stroke: #818cf8;
+}
+
+/* =========================================
+   SIDEBAR FOOTER
+========================================= */
+
+.sidebarFooter {
+  padding-top: 1rem;
+  border-top: 1px solid #1f2937;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.storefrontBtn,
+.logoutBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.storefrontBtn .navIcon,
+.logoutBtn .navIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  transition: stroke 0.15s ease;
+}
+
+/* Storefront */
+
+.storefrontBtn {
+  color: #9ca3af;
+}
+
+.storefrontBtn .navIcon {
+  stroke: #9ca3af;
+}
+
+.storefrontBtn:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  color: #f3f4f6;
+}
+
+.storefrontBtn:hover .navIcon {
+  stroke: #f3f4f6;
+}
+
+/* Logout */
+
+.logoutBtn {
+  color: #f87171;
+}
+
+.logoutBtn .navIcon {
+  stroke: #f87171;
+}
+
+.logoutBtn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.logoutBtn:hover .navIcon {
+  stroke: #ef4444;
+}
+
+/* =========================================
+   MAIN WRAPPER
+========================================= */
+
+.mainWrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin-left: 0;
+}
+
+/* =========================================
+   TOPBAR
+========================================= */
+
+.topbar {
+  height: 64px;
+  background-color: #111827;
+  border-bottom: 1px solid #1f2937;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.topbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Menu Button */
+
+.menuToggleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.menuToggleBtn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.menuToggleBtn:hover {
+  background-color: #1f2937;
+  color: #f3f4f6;
+}
+
+/* Breadcrumb */
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.breadcrumbDivider {
+  color: #374151;
+}
+
+.breadcrumbCurrent {
+  color: #f3f4f6;
+  font-weight: 600;
+}
+
+/* =========================================
+   TOPBAR RIGHT
+========================================= */
+
+.topbarRight {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Live Store */
+
+.liveStoreBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+  color: #d1d5db;
+  font-size: 0.825rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.liveStoreBtn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.liveStoreBtn:hover {
+  background-color: #1f2937;
+  color: #ffffff;
+}
+
+/* Divider */
+
+.topbarDivider {
+  width: 1px;
+  height: 20px;
+  background-color: #1f2937;
+}
+
+/* Topbar User */
+
+.topbarUser {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.topbarAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topbarName {
+  font-size: 0.85rem;
+  color: #e5e7eb;
+  font-weight: 500;
+}
+
+/* Topbar Logout */
+
+.topbarLogoutBtn {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  padding: 0.4rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.topbarLogoutBtn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.topbarLogoutBtn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+}
+
+/* =========================================
+   CONTENT BODY
+========================================= */
+
+.contentBody {
+  padding: 2rem;
+  flex: 1;
+}
+
+/* =========================================
+   DESKTOP RESPONSIVE
+========================================= */
+
+@media (min-width: 1024px) {
   .sidebar {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 260px;
-    background-color: #111827;
-    border-right: 1px solid #1f2937;
-    display: flex;
-    flex-direction: column;
-    padding: 1.25rem 1rem;
-    z-index: 50;
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    box-sizing: border-box;
-
-    &.sidebarOpen {
-      transform: translateX(0);
-    }
-
-    /* Brand Section */
-    .brandHeader {
-      padding: 0.25rem 0.5rem 1.25rem 0.5rem;
-
-      .brandLink {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        text-decoration: none;
-
-        .brandLogo {
-          width: 36px;
-          height: 36px;
-          border-radius: 8px;
-          background: linear-gradient(135deg, #6366f1, #4f46e5);
-          color: #ffffff;
-          font-weight: 800;
-          font-size: 1.2rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-        }
-
-        .brandText {
-          display: flex;
-          flex-direction: column;
-
-          .brandName {
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: #f9fafb;
-            letter-spacing: -0.02em;
-          }
-
-          .brandTag {
-            font-size: 0.625rem;
-            font-weight: 700;
-            color: #818cf8;
-            letter-spacing: 0.08em;
-          }
-        }
-      }
-    }
-
-    /* User Profile Card */
-    .userCard {
-      background-color: #1f2937;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 10px;
-      padding: 0.75rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 1.25rem;
-
-      .avatarWrapper {
-        position: relative;
-
-        .avatar {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          background-color: #374151;
-          color: #e5e7eb;
-          font-weight: 600;
-          font-size: 0.9rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .statusIndicator {
-          position: absolute;
-          bottom: 0;
-          right: 0;
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          background-color: #10b981;
-          border: 2px solid #1f2937;
-        }
-      }
-
-      .userInfo {
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-
-        .roleBadge {
-          font-size: 0.625rem;
-          font-weight: 600;
-          color: #38bdf8;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-
-        .userName {
-          font-size: 0.85rem;
-          color: #f3f4f6;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .userEmail {
-          font-size: 0.725rem;
-          color: #9ca3af;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-      }
-    }
-
-    /* Navigation Menu */
-    .navMenu {
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-      flex: 1;
-
-      .navItem {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.65rem 0.85rem;
-        border-radius: 8px;
-        color: #9ca3af;
-        text-decoration: none;
-        font-size: 0.9rem;
-        font-weight: 500;
-        transition: all 0.15s ease;
-
-        .navIcon {
-          width: 18px;
-          height: 18px;
-          flex-shrink: 0;
-          stroke: #9ca3af;
-          transition: stroke 0.15s ease;
-        }
-
-        &:hover {
-          background-color: rgba(255, 255, 255, 0.04);
-          color: #f3f4f6;
-
-          .navIcon {
-            stroke: #f3f4f6;
-          }
-        }
-
-        &.navItemActive {
-          background-color: rgba(99, 102, 241, 0.12);
-          color: #818cf8;
-          font-weight: 600;
-
-          .navIcon {
-            stroke: #818cf8;
-          }
-        }
-      }
-    }
-
-    /* Footer Buttons */
-    .sidebarFooter {
-      padding-top: 1rem;
-      border-top: 1px solid #1f2937;
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-
-      .storefrontBtn,
-      .logoutBtn {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.6rem 0.85rem;
-        border-radius: 8px;
-        font-size: 0.85rem;
-        font-weight: 500;
-        text-decoration: none;
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        width: 100%;
-        text-align: left;
-        transition: all 0.15s ease;
-        box-sizing: border-box;
-
-        .navIcon {
-          width: 18px;
-          height: 18px;
-          flex-shrink: 0;
-          transition: stroke 0.15s ease;
-        }
-      }
-
-      .storefrontBtn {
-        color: #9ca3af;
-
-        .navIcon {
-          stroke: #9ca3af;
-        }
-
-        &:hover {
-          background-color: rgba(255, 255, 255, 0.04);
-          color: #f3f4f6;
-
-          .navIcon {
-            stroke: #f3f4f6;
-          }
-        }
-      }
-
-      .logoutBtn {
-        color: #f87171;
-
-        .navIcon {
-          stroke: #f87171;
-        }
-
-        &:hover {
-          background-color: rgba(239, 68, 68, 0.1);
-          color: #ef4444;
-
-          .navIcon {
-            stroke: #ef4444;
-          }
-        }
-      }
-    }
+    transform: translateX(0) !important;
   }
 
-  /* Main Content Area */
   .mainWrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    margin-left: 0;
-
-    /* Top Navigation Bar */
-    .topbar {
-      height: 64px;
-      background-color: #111827;
-      border-bottom: 1px solid #1f2937;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 1.5rem;
-      position: sticky;
-      top: 0;
-      z-index: 30;
-
-      .topbarLeft {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-
-        .menuToggleBtn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 36px;
-          height: 36px;
-          background: transparent;
-          border: 1px solid #1f2937;
-          border-radius: 8px;
-          color: #9ca3af;
-          cursor: pointer;
-
-          svg {
-            width: 20px;
-            height: 20px;
-          }
-
-          &:hover {
-            background-color: #1f2937;
-            color: #f3f4f6;
-          }
-        }
-
-        .breadcrumb {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 0.875rem;
-          color: #6b7280;
-
-          .breadcrumbDivider {
-            color: #374151;
-          }
-
-          .breadcrumbCurrent {
-            color: #f3f4f6;
-            font-weight: 600;
-          }
-        }
-      }
-
-      .topbarRight {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-
-        .liveStoreBtn {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.45rem 0.85rem;
-          background-color: rgba(255, 255, 255, 0.05);
-          border: 1px solid #1f2937;
-          border-radius: 6px;
-          color: #d1d5db;
-          font-size: 0.825rem;
-          font-weight: 500;
-          text-decoration: none;
-          transition: all 0.15s ease;
-
-          svg {
-            width: 15px;
-            height: 15px;
-          }
-
-          &:hover {
-            background-color: #1f2937;
-            color: #ffffff;
-          }
-        }
-
-        .topbarDivider {
-          width: 1px;
-          height: 20px;
-          background-color: #1f2937;
-        }
-
-        .topbarUser {
-          display: flex;
-          align-items: center;
-          gap: 0.6rem;
-
-          .topbarAvatar {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #6366f1, #4f46e5);
-            color: #ffffff;
-            font-size: 0.75rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-
-          .topbarName {
-            font-size: 0.85rem;
-            color: #e5e7eb;
-            font-weight: 500;
-          }
-        }
-
-        .topbarLogoutBtn {
-          background: transparent;
-          border: none;
-          color: #9ca3af;
-          padding: 0.4rem;
-          border-radius: 6px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.15s ease;
-
-          svg {
-            width: 18px;
-            height: 18px;
-          }
-
-          &:hover {
-            background-color: rgba(239, 68, 68, 0.1);
-            color: #f87171;
-          }
-        }
-      }
-    }
-
-    /* Outlet / Page Body */
-    .contentBody {
-      padding: 2rem;
-      flex: 1;
-    }
+    margin-left: 260px;
   }
 
-  /* Responsive Rules Nested Under Shell */
-  @media (min-width: 1024px) {
-    .sidebar {
-      transform: translateX(0) !important;
-    }
+  .menuToggleBtn {
+    display: none;
+  }
+}
 
-    .mainWrapper {
-      margin-left: 260px;
+/* =========================================
+   TABLET / MOBILE
+========================================= */
 
-      .topbar .topbarLeft .menuToggleBtn {
-        display: none;
-      }
-    }
+@media (max-width: 1023px) {
+  .sidebar {
+    transform: translateX(-100%);
   }
 
-  @media (max-width: 1023px) {
-    .sidebar {
-      transform: translateX(-100%);
-    }
+  .topbarName {
+    display: none;
+  }
+}
 
-    .mainWrapper .topbar .topbarRight .topbarUser .topbarName {
-      display: none;
-    }
+/* =========================================
+   SMALL MOBILE
+========================================= */
+
+@media (max-width: 640px) {
+  .topbar {
+    padding: 0 1rem;
+  }
+
+  .contentBody {
+    padding: 1rem;
+  }
+
+  .breadcrumb {
+    font-size: 0.8rem;
+  }
+
+  .liveStoreBtn {
+    padding: 0.4rem 0.6rem;
+  }
+
+  .liveStoreBtn span {
+    display: none;
+  }
+
+  .topbarRight {
+    gap: 0.5rem;
   }
 }
