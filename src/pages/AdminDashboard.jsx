@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import authService from "../services/authService";
 import styles from '../style/AdminDashboard.module.css';
- 
+
 const money = (amount) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
     (amount || 0) / 100
@@ -65,6 +65,42 @@ function AdminDashboard() {
     }
   };
 
+  // --- DAILY REVENUE TIMELINE LOGIC (LAST 7 DAYS) ---
+  const dailyTimeline = useMemo(() => {
+    const rawTimeline = analytics?.timeline || [];
+    const DAYS_TO_SHOW = 7; // آخری 7 دن دکھانے کے لیے
+    const result = [];
+    const today = new Date();
+
+    for (let i = DAYS_TO_SHOW - 1; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(today.getDate() - i);
+
+      // YYYY-MM-DD فارمیٹ ڈیٹ میچنگ کے لیے
+      const dateKey = date.toISOString().split("T")[0]; 
+      // سکرین پر دکھانے کے لیے شارٹ فارمیٹ (e.g. "Oct 12" یا "Mon")
+      const label = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+      // Backend response کے ساتھ میچ کریں
+      const matchedItem = rawTimeline.find(
+        (item) =>
+          item.period === dateKey ||
+          item.date === dateKey ||
+          item._id === dateKey
+      );
+
+      result.push({
+        period: label,
+        revenue: matchedItem ? matchedItem.revenue || 0 : 0,
+      });
+    }
+
+    // اگر Backend پہلے ہی Daily array بھیج رہا ہو تو Fallback رکھیں
+    return rawTimeline.length > 0 && !result.some((r) => r.revenue > 0)
+      ? rawTimeline.slice(-7)
+      : result;
+  }, [analytics]);
+
   if (loading) {
     return (
       <div className={styles.dashboardPage}>
@@ -77,19 +113,18 @@ function AdminDashboard() {
   }
 
   // --- SVG Revenue Chart Calculations ---
-  const timeline = analytics?.timeline || [];
-  const maxRevenue = Math.max(...timeline.map((t) => t.revenue || 0), 100);
+  const maxRevenue = Math.max(...dailyTimeline.map((t) => t.revenue || 0), 100);
 
   // SVG Chart ViewBox Dimensions
   const chartWidth = 700;
   const chartHeight = 220;
-  const paddingX = 40;
-  const paddingY = 30;
+  const paddingX = 45;
+  const paddingY = 35;
 
-  const chartPoints = timeline.map((item, index) => {
+  const chartPoints = dailyTimeline.map((item, index) => {
     const x =
       paddingX +
-      (index / Math.max(timeline.length - 1, 1)) * (chartWidth - paddingX * 2);
+      (index / Math.max(dailyTimeline.length - 1, 1)) * (chartWidth - paddingX * 2);
     const y =
       chartHeight -
       paddingY -
@@ -274,16 +309,16 @@ function AdminDashboard() {
           <div className={styles.chartPanel}>
             <div className={styles.panelHeader}>
               <div>
-                <h2>Revenue Over Time</h2>
-                <p>Aggregated revenue trends from completed orders</p>
+                <h2>Daily Revenue (Last 7 Days)</h2>
+                <p>Daily earnings breakdown from completed checkouts</p>
               </div>
               <span className={styles.liveBadge}>
                 <span className={styles.pulseDot}></span>
-                Live Metrics
+                Live Daily
               </span>
             </div>
 
-            {timeline.length === 0 ? (
+            {dailyTimeline.length === 0 ? (
               <div className={styles.chartEmpty}>
                 <p>No historical transactions recorded yet.</p>
               </div>
@@ -355,14 +390,14 @@ function AdminDashboard() {
                         r="5"
                         className={styles.chartCircle}
                       />
-                      {/* Price Label */}
+                      {/* Formatted Price Label */}
                       <text
                         x={pt.x}
                         y={pt.y - 12}
                         textAnchor="middle"
                         className={styles.chartValueText}
                       >
-                        ${pt.revenue}
+                        {money(pt.revenue)}
                       </text>
                       {/* Time Period Label */}
                       <text
