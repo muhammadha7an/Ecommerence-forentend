@@ -1,12 +1,12 @@
 /* =========================================
-   ROOT LAYOUT
+   ROOT LAYOUT (LIGHT THEME)
 ========================================= */
 
 .shell {
   display: flex;
   min-height: 100vh;
-  background-color: #0b0f19;
-  color: #f3f4f6;
+  background-color: #f8fafc; /* Clean Light Gray */
+  color: #0f172a; /* Slate Dark Text */
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   box-sizing: border-box;
 }
@@ -18,7 +18,7 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(15, 23, 42, 0.4);
   backdrop-filter: blur(4px);
   z-index: 40;
   border: none;
@@ -35,8 +35,8 @@
   bottom: 0;
   left: 0;
   width: 260px;
-  background-color: #111827;
-  border-right: 1px solid #1f2937;
+  background-color: #ffffff;
+  border-right: 1px solid #e2e8f0;
   display: flex;
   flex-direction: column;
   padding: 1.25rem 1rem;
@@ -75,7 +75,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
 }
 
 .brandText {
@@ -86,14 +86,14 @@
 .brandName {
   font-size: 1.15rem;
   font-weight: 700;
-  color: #f9fafb;
+  color: #0f172a;
   letter-spacing: -0.02em;
 }
 
 .brandTag {
   font-size: 0.625rem;
   font-weight: 700;
-  color: #818cf8;
+  color: #4f46e5;
   letter-spacing: 0.08em;
 }
 
@@ -102,8 +102,8 @@
 ========================================= */
 
 .userCard {
-  background-color: #1f2937;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
   padding: 0.75rem;
   display: flex;
@@ -120,14 +120,14 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background-color: #374151;
-  color: #e5e7eb;
+  background-color: #e2e8f0;
+  color: #334155;
   font-weight: 600;
   font-size: 0.9rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid #cbd5e1;
 }
 
 .statusIndicator {
@@ -138,7 +138,7 @@
   height: 10px;
   border-radius: 50%;
   background-color: #10b981;
-  border: 2px solid #1f2937;
+  border: 2px solid #ffffff;
 }
 
 .userInfo {
@@ -149,15 +149,16 @@
 
 .roleBadge {
   font-size: 0.625rem;
-  font-weight: 600;
-  color: #38bdf8;
+  font-weight: 700;
+  color: #0284c7;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .userName {
   font-size: 0.85rem;
-  color: #f3f4f6;
+  font-weight: 600;
+  color: #1e293b;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -165,14 +166,14 @@
 
 .userEmail {
   font-size: 0.725rem;
-  color: #9ca3af;
+  color: #64748b;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 /* =========================================
-   NAVIGATION
+   NAVIGATION & SVG ICONS
 ========================================= */
 
 .navMenu {
@@ -188,38 +189,43 @@
   gap: 0.75rem;
   padding: 0.65rem 0.85rem;
   border-radius: 8px;
-  color: #9ca3af;
+  color: #64748b;
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 500;
   transition: all 0.15s ease;
 }
 
+/* Universal SVG Icon Style */
 .navIcon {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
-  stroke: #9ca3af;
+  stroke: #64748b;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   transition: stroke 0.15s ease;
 }
 
 .navItem:hover {
-  background-color: rgba(255, 255, 255, 0.04);
-  color: #f3f4f6;
+  background-color: #f1f5f9;
+  color: #0f172a;
 }
 
 .navItem:hover .navIcon {
-  stroke: #f3f4f6;
+  stroke: #0f172a;
 }
 
 .navItemActive {
-  background-color: rgba(99, 102, 241, 0.12);
-  color: #818cf8;
+  background-color: #eef2ff;
+  color: #4f46e5;
   font-weight: 600;
 }
 
 .navItemActive .navIcon {
-  stroke: #818cf8;
+  stroke: #4f46e5;
 }
 
 /* =========================================
@@ -228,7 +234,7 @@
 
 .sidebarFooter {
   padding-top: 1rem;
-  border-top: 1px solid #1f2937;
+  border-top: 1px solid #e2e8f0;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -253,54 +259,46 @@
   box-sizing: border-box;
 }
 
-.storefrontBtn .navIcon,
-.logoutBtn .navIcon {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  transition: stroke 0.15s ease;
-}
-
-/* Storefront */
+/* Storefront Button */
 
 .storefrontBtn {
-  color: #9ca3af;
+  color: #64748b;
 }
 
 .storefrontBtn .navIcon {
-  stroke: #9ca3af;
+  stroke: #64748b;
 }
 
 .storefrontBtn:hover {
-  background-color: rgba(255, 255, 255, 0.04);
-  color: #f3f4f6;
+  background-color: #f1f5f9;
+  color: #0f172a;
 }
 
 .storefrontBtn:hover .navIcon {
-  stroke: #f3f4f6;
+  stroke: #0f172a;
 }
 
-/* Logout */
+/* Logout Button */
 
 .logoutBtn {
-  color: #f87171;
+  color: #dc2626;
 }
 
 .logoutBtn .navIcon {
-  stroke: #f87171;
+  stroke: #dc2626;
 }
 
 .logoutBtn:hover {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  background-color: #fef2f2;
+  color: #b91c1c;
 }
 
 .logoutBtn:hover .navIcon {
-  stroke: #ef4444;
+  stroke: #b91c1c;
 }
 
 /* =========================================
-   MAIN WRAPPER
+   MAIN WRAPPER & TOPBAR
 ========================================= */
 
 .mainWrapper {
@@ -311,14 +309,10 @@
   margin-left: 0;
 }
 
-/* =========================================
-   TOPBAR
-========================================= */
-
 .topbar {
   height: 64px;
-  background-color: #111827;
-  border-bottom: 1px solid #1f2937;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -334,7 +328,7 @@
   gap: 1rem;
 }
 
-/* Menu Button */
+/* Menu Toggle Button */
 
 .menuToggleBtn {
   display: flex;
@@ -342,21 +336,28 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: transparent;
-  border: 1px solid #1f2937;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  color: #9ca3af;
+  color: #64748b;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .menuToggleBtn svg {
   width: 20px;
   height: 20px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .menuToggleBtn:hover {
-  background-color: #1f2937;
-  color: #f3f4f6;
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
 }
 
 /* Breadcrumb */
@@ -366,15 +367,15 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #64748b;
 }
 
 .breadcrumbDivider {
-  color: #374151;
+  color: #cbd5e1;
 }
 
 .breadcrumbCurrent {
-  color: #f3f4f6;
+  color: #0f172a;
   font-weight: 600;
 }
 
@@ -388,17 +389,15 @@
   gap: 1rem;
 }
 
-/* Live Store */
-
 .liveStoreBtn {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.45rem 0.85rem;
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid #1f2937;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 6px;
-  color: #d1d5db;
+  color: #334155;
   font-size: 0.825rem;
   font-weight: 500;
   text-decoration: none;
@@ -406,24 +405,26 @@
 }
 
 .liveStoreBtn svg {
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .liveStoreBtn:hover {
-  background-color: #1f2937;
-  color: #ffffff;
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
 }
-
-/* Divider */
 
 .topbarDivider {
   width: 1px;
   height: 20px;
-  background-color: #1f2937;
+  background-color: #e2e8f0;
 }
-
-/* Topbar User */
 
 .topbarUser {
   display: flex;
@@ -432,12 +433,12 @@
 }
 
 .topbarAvatar {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: linear-gradient(135deg, #6366f1, #4f46e5);
   color: #ffffff;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -446,16 +447,14 @@
 
 .topbarName {
   font-size: 0.85rem;
-  color: #e5e7eb;
-  font-weight: 500;
+  color: #1e293b;
+  font-weight: 600;
 }
-
-/* Topbar Logout */
 
 .topbarLogoutBtn {
   background: transparent;
   border: none;
-  color: #9ca3af;
+  color: #64748b;
   padding: 0.4rem;
   border-radius: 6px;
   cursor: pointer;
@@ -468,15 +467,20 @@
 .topbarLogoutBtn svg {
   width: 18px;
   height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .topbarLogoutBtn:hover {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: #f87171;
+  background-color: #fef2f2;
+  color: #dc2626;
 }
 
 /* =========================================
-   CONTENT BODY
+   CONTENT BODY & RESPONSIVE
 ========================================= */
 
 .contentBody {
@@ -484,63 +488,43 @@
   flex: 1;
 }
 
-/* =========================================
-   DESKTOP RESPONSIVE
-========================================= */
-
 @media (min-width: 1024px) {
   .sidebar {
     transform: translateX(0) !important;
   }
-
   .mainWrapper {
     margin-left: 260px;
   }
-
   .menuToggleBtn {
     display: none;
   }
 }
 
-/* =========================================
-   TABLET / MOBILE
-========================================= */
-
 @media (max-width: 1023px) {
   .sidebar {
     transform: translateX(-100%);
   }
-
   .topbarName {
     display: none;
   }
 }
 
-/* =========================================
-   SMALL MOBILE
-========================================= */
-
 @media (max-width: 640px) {
   .topbar {
     padding: 0 1rem;
   }
-
   .contentBody {
     padding: 1rem;
   }
-
   .breadcrumb {
     font-size: 0.8rem;
   }
-
   .liveStoreBtn {
     padding: 0.4rem 0.6rem;
   }
-
   .liveStoreBtn span {
     display: none;
   }
-
   .topbarRight {
     gap: 0.5rem;
   }
