@@ -50,6 +50,7 @@
   z-index: 50;
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .sidebarOpen {
@@ -69,6 +70,7 @@
   align-items: center;
   gap: 0.75rem;
   text-decoration: none;
+  font-family: inherit;
 }
 
 .brandLogo {
@@ -117,6 +119,7 @@
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 1.25rem;
+  font-family: inherit;
 }
 
 .avatarWrapper {
@@ -201,6 +204,7 @@
   font-size: 0.9rem;
   font-weight: 500;
   transition: all 0.15s ease;
+  font-family: inherit;
 }
 
 /* Universal SVG Icon Style */
@@ -264,6 +268,7 @@
   text-align: left;
   transition: all 0.15s ease;
   box-sizing: border-box;
+  font-family: inherit;
 }
 
 /* Storefront Button */

@@ -2,6 +2,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import authService from "../services/authService";
+import styles from "../style/AdminDashboard.module.css";
+
 
 const money = (amount) =>
   new Intl.NumberFormat("en-US", {
@@ -174,23 +176,6 @@ function AdminDashboard() {
   };
 
   /*
-   * LOADING
-   */
-  if (loading) {
-    return (
-      <div className="dashboard-page">
-        <div className="dashboard-loading">
-          <div className="dashboard-spinner"></div>
-
-          <p>
-            Loading real-time admin metrics...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  /*
    * =====================================================
    * DAILY EARNINGS
    * =====================================================
@@ -297,8 +282,25 @@ function AdminDashboard() {
       0
     ) || 1;
 
+  /*
+   * LOADING
+   */
+  if (loading) {
+    return (
+      <div className={`${styles.dashboardRoot} dashboard-page`}>
+        <div className="dashboard-loading">
+          <div className="dashboard-spinner"></div>
+
+          <p>
+            Loading real-time admin metrics...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="dashboard-page">
+    <div className={`${styles.dashboardRoot} dashboard-page`}>
       <div className="dashboard-container">
 
         {/* =========================

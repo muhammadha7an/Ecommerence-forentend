@@ -63,7 +63,7 @@ export default function ProductCard({ product }) {
       <div className="product-info">
         <span className="product-meta">{product.category || 'Essential'}</span>
         <h3 className="product-name">
-          <Link to={`/product/${productId}`}>{product.name}</Link>
+          <Link to={`/product/${productId}`} className="product-card-link">{product.name}</Link>
         </h3>
 
         <div className="product-action-row">

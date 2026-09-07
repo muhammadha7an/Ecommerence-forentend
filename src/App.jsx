@@ -11,7 +11,6 @@ import './style/checkout.css'
 import './style/success.css'
 import './style/account.css'
 import './style/dashboard.css'
-import './style/admin-theme.css'
 
 import { useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
