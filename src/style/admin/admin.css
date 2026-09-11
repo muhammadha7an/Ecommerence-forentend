@@ -1,0 +1,269 @@
+/* ==========================================================================
+   ADMIN-ONLY helpers (everything else comes from dashboard/console.css)
+   ========================================================================== */
+
+.admin-stock {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--c-text);
+  font-weight: var(--fw-medium);
+}
+
+.admin-stock .ui-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.admin-stock--low {
+  color: var(--c-warning);
+  font-weight: var(--fw-semibold);
+}
+
+.admin-stock--out {
+  color: var(--c-danger);
+  font-weight: var(--fw-semibold);
+}
+
+.admin-stock-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.admin-subscriber-email {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.admin-subscriber-email .console-avatar {
+  background: var(--c-sage);
+  color: var(--c-ink);
+}
+
+/* ---------- Dashboard KPI grid (auto-fits 8–10 cards) ---------- */
+.console-stats.console-stats--kpis {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+}
+
+/* ---------- Settings ---------- */
+.admin-settings {
+  max-width: 980px;
+}
+
+.admin-settings .console-tab .ui-icon,
+.console-tab .ui-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.admin-settings__legend {
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--c-line);
+  color: var(--c-ink);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+}
+
+.admin-settings__actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--sp-4) var(--sp-6);
+  border-top: 1px solid var(--c-line);
+}
+
+.admin-settings__preview h3 {
+  margin-bottom: var(--sp-3);
+  color: var(--c-ink);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+}
+
+.admin-settings__preview .console-table-wrap {
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+}
+
+.admin-settings__preview-table {
+  min-width: 0;
+}
+
+.admin-templates {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-template {
+  border-bottom: 1px solid var(--c-line);
+}
+
+.admin-template:last-child {
+  border-bottom: 0;
+}
+
+.admin-template__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding-right: var(--sp-6);
+}
+
+.admin-template__toggle {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-6);
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.admin-template__toggle > .ui-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--c-text-subtle);
+  transition: transform var(--t-base) var(--ease);
+}
+
+.admin-template.is-open .admin-template__toggle > .ui-icon {
+  transform: rotate(180deg);
+}
+
+.admin-template__title {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.admin-template__title strong {
+  color: var(--c-ink);
+}
+
+.admin-template__title small {
+  color: var(--c-text-muted);
+  font-size: var(--fs-xs);
+}
+
+.admin-template__switch {
+  flex-shrink: 0;
+}
+
+.admin-template__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: 0 var(--sp-6) var(--sp-6);
+  animation: ui-fade-in var(--t-base) var(--ease);
+}
+
+.admin-template__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.admin-template__foot code.console-chip {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ---------- Contact messages ---------- */
+.admin-messages-table tr.is-unread td {
+  background: #fbfaf5;
+}
+
+.admin-messages-table tr.is-unread .console-cell__stack strong {
+  font-weight: var(--fw-bold);
+}
+
+.admin-messages-table__subject {
+  max-width: 420px;
+}
+
+.admin-messages-table__subject .console-muted {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-messages__body {
+  padding: var(--sp-5);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  background: var(--c-surface-alt);
+  color: var(--c-text);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.admin-messages__spacer {
+  flex: 1;
+}
+
+.admin-messages__confirm {
+  flex: 1;
+  color: var(--c-danger);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+}
+
+@media (max-width: 760px) {
+  .admin-template__head {
+    padding-right: var(--sp-4);
+  }
+
+  .admin-template__toggle {
+    padding: var(--sp-4);
+  }
+
+  .admin-template__body {
+    padding: 0 var(--sp-4) var(--sp-4);
+  }
+
+  .admin-settings__actions {
+    padding: var(--sp-3) var(--sp-4);
+  }
+
+  .admin-settings__actions .ui-btn {
+    width: 100%;
+  }
+
+  .admin-messages-table td[data-label="Subject"] {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    text-align: left;
+  }
+
+  .admin-messages-table .admin-messages-table__subject {
+    max-width: 100%;
+    align-items: flex-start;
+  }
+
+  .admin-messages-table__subject .console-muted {
+    display: -webkit-box;
+    white-space: normal;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+}
+
+@media (max-width: 600px) {
+  .console-stats.console-stats--kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 340px) {
+  .console-stats.console-stats--kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

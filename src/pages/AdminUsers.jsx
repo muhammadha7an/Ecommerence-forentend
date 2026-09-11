@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useState, useMemo } from "react";
 import authService from "../services/authService";
+import Icon from "../components/Icon";
+import StatusBadge from "../components/StatusBadge";
+import EmptyState from "../components/EmptyState";
+import Modal from "../components/Modal";
 
 function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -10,6 +14,7 @@ function AdminUsers() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [updatingUserId, setUpdatingUserId] = useState(null);
+  const [actionError, setActionError] = useState("");
 
   const currentUser = JSON.parse(localStorage.getItem("user") || "null");
 
@@ -32,6 +37,7 @@ function AdminUsers() {
 
   const handleRoleChange = async (userId, newRole) => {
     setUpdatingUserId(userId);
+    setActionError("");
     try {
       const res = await authService.updateUserRole(userId, newRole);
       setUsers((prev) =>
@@ -40,7 +46,7 @@ function AdminUsers() {
       setFeedback(res.message || "User role updated successfully");
       setTimeout(() => setFeedback(""), 3000);
     } catch (err) {
-      alert(err.response?.data?.message || "Unable to update role");
+      setActionError(err.response?.data?.message || "Unable to update role");
     } finally {
       setUpdatingUserId(null);
     }
@@ -49,6 +55,7 @@ function AdminUsers() {
   const confirmDeleteUser = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
+    setActionError("");
     try {
       await authService.deleteUser(deleteTarget.id);
       setUsers((prev) => prev.filter((u) => u.id !== deleteTarget.id));
@@ -56,7 +63,7 @@ function AdminUsers() {
       setDeleteTarget(null);
       setTimeout(() => setFeedback(""), 3000);
     } catch (err) {
-      alert(err.response?.data?.message || "Unable to delete user");
+      setActionError(err.response?.data?.message || "Unable to delete user");
     } finally {
       setDeleting(false);
     }
@@ -73,61 +80,110 @@ function AdminUsers() {
     );
   }, [users, search]);
 
+  const adminCount = users.filter((u) => u.role === "admin").length;
+  const buyersCount = users.filter((u) => (u.orderCount || 0) > 0).length;
+
   return (
-    <div className="dashboard-page">
-      <div className="dashboard-container">
-        {/* Header */}
-        <div className="dashboard-header">
-          <div>
-            <span className="dashboard-welcome">Account Directory</span>
-            <h1>Registered Users ({users.length})</h1>
-            <p>Inspect customer accounts, order counts, and administrative privileges</p>
-          </div>
-
-          <div className="dashboard-actions">
-            <button className="dashboard-outline-btn" onClick={() => loadUsers("")}>
-              Refresh Users
-            </button>
-          </div>
+    <div className="console-page">
+      {/* Header */}
+      <div className="console-head">
+        <div>
+          <span className="console-head__eyebrow">Account directory</span>
+          <h1>
+            Registered users <span className="console-count">{users.length}</span>
+          </h1>
+          <p>Inspect customer accounts, order counts and administrator access.</p>
         </div>
 
-        {feedback && <div className="alert-message success-message">{feedback}</div>}
-        {error && <div className="dashboard-panel dashboard-error">{error}</div>}
+        <div className="console-head__actions">
+          <button type="button" className="ui-btn ui-btn--secondary" onClick={() => loadUsers("")}>
+            <Icon name="refresh" />
+            Refresh Users
+          </button>
+        </div>
+      </div>
 
-        {/* Search */}
-        <div className="admin-toolbar-row">
-          <div className="admin-search-input">
-            <input
-              type="text"
-              placeholder="Search user name or email..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+      {feedback && (
+        <div className="ui-alert ui-alert--success" role="status">
+          <Icon name="checkCircle" />
+          <span>{feedback}</span>
+        </div>
+      )}
+      {error && (
+        <div className="ui-alert ui-alert--error" role="alert">
+          <Icon name="alertCircle" />
+          <span>{error}</span>
+        </div>
+      )}
+      {actionError && !deleteTarget && (
+        <div className="ui-alert ui-alert--error" role="alert">
+          <Icon name="alertCircle" />
+          <span>{actionError}</span>
+        </div>
+      )}
+
+      {!loading && users.length > 0 && (
+        <div className="console-stats console-stats--3">
+          <div className="console-stat">
+            <div className="console-stat__top">
+              <span>Total accounts</span>
+              <span className="console-stat__icon"><Icon name="users" /></span>
+            </div>
+            <strong className="console-stat__value">{users.length}</strong>
+          </div>
+          <div className="console-stat">
+            <div className="console-stat__top">
+              <span>Customers with orders</span>
+              <span className="console-stat__icon console-stat__icon--success"><Icon name="bag" /></span>
+            </div>
+            <strong className="console-stat__value">{buyersCount}</strong>
+          </div>
+          <div className="console-stat">
+            <div className="console-stat__top">
+              <span>Administrators</span>
+              <span className="console-stat__icon console-stat__icon--clay"><Icon name="shieldCheck" /></span>
+            </div>
+            <strong className="console-stat__value">{adminCount}</strong>
           </div>
         </div>
+      )}
 
-        {loading ? (
-          <div className="dashboard-loading">
-            <div className="dashboard-spinner"></div>
+      {/* Search */}
+      <div className="console-toolbar">
+        <label className="ui-input-icon">
+          <Icon name="search" />
+          <span className="visually-hidden">Search users</span>
+          <input
+            type="search"
+            className="ui-input"
+            placeholder="Search user name or email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </label>
+      </div>
+
+      {loading ? (
+        <div className="console-panel">
+          <div className="ui-loading">
+            <span className="ui-spinner ui-spinner--lg" aria-hidden="true"></span>
             <p>Loading registered accounts...</p>
           </div>
-        ) : filteredUsers.length === 0 ? (
-          <div className="dashboard-empty-panel">
-            <div className="dashboard-empty-icon">👥</div>
-            <h2>No users found</h2>
-            <p>No customer accounts match your search query.</p>
-          </div>
-        ) : (
-          <div className="dashboard-panel order-table-wrap">
-            <table className="dashboard-table admin-users-table">
+        </div>
+      ) : filteredUsers.length === 0 ? (
+        <EmptyState icon="users" title="No users found" text="No customer accounts match your search." />
+      ) : (
+        <div className="console-panel">
+          <div className="console-table-wrap">
+            <table className="console-table console-table--stack">
               <thead>
                 <tr>
-                  <th>User Profile</th>
+                  <th>User</th>
                   <th>Role</th>
                   <th>Orders</th>
-                  <th>Total Spent</th>
-                  <th>Registration Date</th>
-                  <th>Actions</th>
+                  <th>Total spent</th>
+                  <th>Registered</th>
+                  <th className="is-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -138,49 +194,58 @@ function AdminUsers() {
 
                   return (
                     <tr key={user.id}>
-                      <td>
-                        <div className="table-product-cell">
-                          <span className="user-avatar-circle small">{initial}</span>
-                          <div>
+                      <td className="is-primary" data-label="User">
+                        <div className="console-cell">
+                          <span className={`console-avatar console-avatar--sm ${user.role === "admin" ? "console-avatar--ink" : ""}`}>
+                            {initial}
+                          </span>
+                          <div className="console-cell__stack">
                             <strong>
-                              {user.name} {isCurrent && <span className="text-muted">(You)</span>}
+                              {user.name} {isCurrent && <span className="console-muted">(You)</span>}
                             </strong>
-                            <br />
-                            <small className="text-muted">{user.email}</small>
+                            <span className="console-muted">{user.email}</span>
                           </div>
                         </div>
                       </td>
-                      <td>
+                      <td data-label="Role">
                         <select
-                          className="status-selector"
+                          className="ui-select ui-select--sm"
+                          style={{ width: "auto", minWidth: 110 }}
                           value={user.role || "user"}
                           disabled={isCurrent || updatingUserId === user.id}
                           onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                          aria-label={`Role for ${user.name}`}
                         >
                           <option value="user">User</option>
                           <option value="admin">Admin</option>
                         </select>
                       </td>
-                      <td>
-                        <span className="badge-pill count-badge">
+                      <td data-label="Orders">
+                        <span className="ui-badge ui-badge--sage">
                           {user.orderCount || 0} order(s)
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Total spent" className="is-num">
                         <strong>${(user.totalSpent || 0).toFixed(2)}</strong>
                       </td>
-                      <td>{new Date(user.createdAt).toLocaleDateString()}</td>
-                      <td>
+                      <td data-label="Registered">{new Date(user.createdAt).toLocaleDateString()}</td>
+                      <td data-label="" className="is-right">
                         {isCurrent ? (
-                          <span className="text-muted">Active Session</span>
+                          <StatusBadge status="active" label="Active session" />
                         ) : (
-                          <button
-                            type="button"
-                            className="btn-action-delete"
-                            onClick={() => setDeleteTarget(user)}
-                          >
-                            Delete
-                          </button>
+                          <div className="console-actions">
+                            <button
+                              type="button"
+                              className="ui-btn ui-btn--danger-soft ui-btn--sm"
+                              onClick={() => {
+                                setActionError("");
+                                setDeleteTarget(user);
+                              }}
+                            >
+                              <Icon name="trash" />
+                              Delete
+                            </button>
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -189,39 +254,56 @@ function AdminUsers() {
               </tbody>
             </table>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Delete Confirmation Modal */}
-        {deleteTarget && (
-          <div className="modal-backdrop">
-            <div className="modal-card">
-              <h3>Delete User Account</h3>
-              <p>
-                Are you sure you want to remove <strong>"{deleteTarget.name}"</strong> (
-                {deleteTarget.email})?
-              </p>
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="dashboard-outline-btn"
-                  onClick={() => setDeleteTarget(null)}
-                  disabled={deleting}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="dashboard-logout-btn"
-                  onClick={confirmDeleteUser}
-                  disabled={deleting}
-                >
-                  {deleting ? "Deleting..." : "Yes, Delete User"}
-                </button>
-              </div>
+      {/* Delete confirmation */}
+      {deleteTarget && (
+        <Modal
+          title="Delete user account"
+          subtitle="The user will no longer be able to sign in."
+          icon="trash"
+          locked={deleting}
+          onClose={() => setDeleteTarget(null)}
+          footer={
+            <>
+              <button
+                type="button"
+                className="ui-btn ui-btn--secondary"
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="ui-btn ui-btn--danger"
+                onClick={confirmDeleteUser}
+                disabled={deleting}
+              >
+                {deleting ? (
+                  <>
+                    <span className="ui-spinner" aria-hidden="true"></span>
+                    Deleting...
+                  </>
+                ) : (
+                  "Yes, Delete User"
+                )}
+              </button>
+            </>
+          }
+        >
+          {actionError && (
+            <div className="ui-alert ui-alert--error" role="alert">
+              <Icon name="alertCircle" />
+              <span>{actionError}</span>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+          <p>
+            Are you sure you want to remove <strong>"{deleteTarget.name}"</strong> ({deleteTarget.email})?
+          </p>
+        </Modal>
+      )}
     </div>
   );
 }

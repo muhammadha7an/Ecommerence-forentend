@@ -110,6 +110,7 @@ const initialState = {
   ],
   loading: false,
   error: null,
+  loadedFromServer: false,
 }
 
 const productsSlice = createSlice({
@@ -147,6 +148,7 @@ const productsSlice = createSlice({
         state.loading = false
         if (Array.isArray(action.payload) && action.payload.length > 0) {
           state.items = action.payload
+          state.loadedFromServer = true
         }
       })
       .addCase(fetchProducts.rejected, (state, action) => {

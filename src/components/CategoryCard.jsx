@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import { getImageUrl } from '../services/api';
+import Icon from './Icon.jsx';
+import '../style/components/category-card.css';
 
 export default function CategoryCard({ category }) {
   const defaultImage =
@@ -7,21 +9,24 @@ export default function CategoryCard({ category }) {
 
   const categoryTarget = category.id || category.legacyId || category.name || category._id;
   const imageSrc = category.image ? getImageUrl(category.image) : defaultImage;
+  const count = Number(category.productCount);
 
   return (
     <Link to={`/shop?category=${encodeURIComponent(categoryTarget)}`} className="category-card">
-      <div className="category-image-wrapper">
-        <img src={imageSrc} alt={category.name} loading="lazy" />
-        <div className="category-overlay" />
+      <div className="category-card__media">
+        <img src={imageSrc} alt="" loading="lazy" />
       </div>
-      <div className="category-content">
-        <h3>{category.name}</h3>
-        <span className="category-link">
-          Explore
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-            <polyline points="12 5 19 12 12 19"></polyline>
-          </svg>
+      <div className="category-card__body">
+        <div>
+          <h3 className="category-card__name">{category.name}</h3>
+          {Number.isFinite(count) && count > 0 && (
+            <span className="category-card__count">
+              {count} {count === 1 ? 'product' : 'products'}
+            </span>
+          )}
+        </div>
+        <span className="category-card__arrow" aria-hidden="true">
+          <Icon name="arrowRight" />
         </span>
       </div>
     </Link>

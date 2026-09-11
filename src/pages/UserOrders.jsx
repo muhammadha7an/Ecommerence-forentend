@@ -1,6 +1,9 @@
 import { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import authService from "../services/authService";
+import Icon from "../components/Icon";
+import StatusBadge from "../components/StatusBadge";
+import EmptyState from "../components/EmptyState";
 
 const money = (amount, currency = "usd") =>
   new Intl.NumberFormat("en-US", {
@@ -71,96 +74,115 @@ function UserOrders() {
     });
   }, [orders, activeTab, search]);
 
+  const countFor = (tab) =>
+    orders.filter((order) => {
+      const status = (order.orderStatus || "").toLowerCase();
+      if (tab === "pending") return status === "pending" || status === "processing";
+      return status === tab;
+    }).length;
+
+  const tabs = [
+    { key: "all", label: "All", count: orders.length },
+    { key: "pending", label: "In Progress", count: countFor("pending") },
+    { key: "shipped", label: "Shipped", count: countFor("shipped") },
+    { key: "delivered", label: "Delivered", count: countFor("delivered") },
+  ];
+
   return (
-    <div className="dashboard-page">
-      <div className="dashboard-container">
-        {/* Header */}
-        <div className="dashboard-header">
-          <div>
-            <span className="dashboard-welcome">Account Area</span>
-            <h1>My Order History</h1>
-            <p>View all past orders, delivery progress, and detailed invoices.</p>
-          </div>
-          <Link className="dashboard-outline-btn" to="/dashboard">
+    <div className="console-page">
+      {/* Header */}
+      <div className="console-head">
+        <div>
+          <span className="console-head__eyebrow">Account area</span>
+          <h1>My order history</h1>
+          <p>View past orders, delivery progress and detailed invoices.</p>
+        </div>
+        <div className="console-head__actions">
+          <Link className="ui-btn ui-btn--secondary" to="/dashboard">
+            <Icon name="arrowLeft" />
             Back to Dashboard
           </Link>
         </div>
+      </div>
 
-        {/* Filters and search bar */}
-        <div className="dashboard-filter-bar">
-          <div className="tab-pills">
+      {/* Tabs + search */}
+      <div className="console-toolbar">
+        <div className="console-tabs" role="tablist" aria-label="Filter orders by status">
+          {tabs.map((tab) => (
             <button
-              className={`tab-pill ${activeTab === "all" ? "active" : ""}`}
-              onClick={() => setActiveTab("all")}
+              key={tab.key}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tab.key}
+              className={`console-tab ${activeTab === tab.key ? "is-active" : ""}`}
+              onClick={() => setActiveTab(tab.key)}
             >
-              All ({orders.length})
+              {tab.label}
+              <span className="console-tab__count">{tab.count}</span>
             </button>
-            <button
-              className={`tab-pill ${activeTab === "pending" ? "active" : ""}`}
-              onClick={() => setActiveTab("pending")}
-            >
-              In Progress
-            </button>
-            <button
-              className={`tab-pill ${activeTab === "shipped" ? "active" : ""}`}
-              onClick={() => setActiveTab("shipped")}
-            >
-              Shipped
-            </button>
-            <button
-              className={`tab-pill ${activeTab === "delivered" ? "active" : ""}`}
-              onClick={() => setActiveTab("delivered")}
-            >
-              Delivered
-            </button>
-          </div>
-
-          <div className="dashboard-search-box">
-            <input
-              type="text"
-              placeholder="Search by order # or product..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+          ))}
         </div>
 
-        {loading && (
-          <div className="dashboard-loading">
-            <div className="dashboard-spinner"></div>
+        <div className="console-toolbar__spacer" />
+
+        <label className="ui-input-icon" style={{ maxWidth: 340 }}>
+          <Icon name="search" />
+          <span className="visually-hidden">Search orders</span>
+          <input
+            type="search"
+            className="ui-input ui-input--sm"
+            placeholder="Search by order # or product..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </label>
+      </div>
+
+      {loading && (
+        <div className="console-panel">
+          <div className="ui-loading">
+            <span className="ui-spinner ui-spinner--lg" aria-hidden="true"></span>
             <p>Loading your orders...</p>
           </div>
-        )}
+        </div>
+      )}
 
-        {error && <div className="dashboard-panel dashboard-error">{error}</div>}
+      {error && (
+        <div className="ui-alert ui-alert--error" role="alert">
+          <Icon name="alertCircle" />
+          <span>{error}</span>
+        </div>
+      )}
 
-        {!loading && !error && filteredOrders.length === 0 && (
-          <div className="dashboard-empty-panel">
-            <div className="dashboard-empty-icon">📦</div>
-            <h2>No orders found</h2>
-            <p>
-              {orders.length === 0
-                ? "You haven't made any purchases yet."
-                : "No orders match your search or filter."}
-            </p>
-            <Link className="dashboard-view-btn" to="/shop">
-              Browse Collection
-            </Link>
-          </div>
-        )}
+      {!loading && !error && filteredOrders.length === 0 && (
+        <EmptyState
+          icon="package"
+          title="No orders found"
+          text={
+            orders.length === 0
+              ? "You haven't made any purchases yet."
+              : "No orders match your search or filter."
+          }
+        >
+          <Link className="ui-btn" to="/shop">
+            Browse Collection
+          </Link>
+        </EmptyState>
+      )}
 
-        {!loading && !error && filteredOrders.length > 0 && (
-          <div className="dashboard-panel order-table-wrap">
-            <table className="dashboard-table">
+      {!loading && !error && filteredOrders.length > 0 && (
+        <div className="console-panel">
+          <div className="console-table-wrap">
+            <table className="console-table console-table--stack">
               <thead>
                 <tr>
-                  <th>Order Reference</th>
-                  <th>Placed On</th>
+                  <th>Order</th>
+                  <th>Placed on</th>
                   <th>Products</th>
                   <th>Amount</th>
                   <th>Payment</th>
-                  <th>Shipping Status</th>
-                  <th>Action</th>
+                  <th>Shipping status</th>
+                  <th className="is-right">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -170,42 +192,37 @@ function UserOrders() {
                       (sum, item) => sum + (item.quantity || 1),
                       0
                     ) || 0;
-                  const statusClass = (order.orderStatus || "pending")
-                    .toLowerCase()
-                    .replace(/\s+/g, "-");
 
                   return (
                     <tr key={order._id}>
-                      <td>
-                        <strong>#{String(order._id).slice(-8)}</strong>
+                      <td className="is-primary" data-label="Order">
+                        <div className="console-cell__stack">
+                          <span className="console-mono">#{String(order._id).slice(-8).toUpperCase()}</span>
+                          {order.items?.[0]?.name && (
+                            <span className="console-muted">
+                              {order.items[0].name}
+                              {order.items.length > 1 ? ` +${order.items.length - 1} more` : ""}
+                            </span>
+                          )}
+                        </div>
                       </td>
-                      <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-                      <td>
+                      <td data-label="Placed on">{new Date(order.createdAt).toLocaleDateString()}</td>
+                      <td data-label="Products">
                         {itemsCount} {itemsCount === 1 ? "item" : "items"}
                       </td>
-                      <td>
-                        <strong>
-                          {money(order.totalAmount, order.currency)}
-                        </strong>
+                      <td data-label="Amount" className="is-num">
+                        <strong>{money(order.totalAmount, order.currency)}</strong>
                       </td>
-                      <td>
-                        <span
-                          className={`payment-pill ${order.paymentStatus || "unpaid"}`}
-                        >
-                          {order.paymentStatus || "unpaid"}
-                        </span>
+                      <td data-label="Payment">
+                        <StatusBadge status={order.paymentStatus || "unpaid"} />
                       </td>
-                      <td>
-                        <span className={`status-badge ${statusClass}`}>
-                          {order.orderStatus || "pending"}
-                        </span>
+                      <td data-label="Status">
+                        <StatusBadge status={order.orderStatus || "pending"} />
                       </td>
-                      <td>
-                        <Link
-                          className="table-action-link"
-                          to={`/dashboard/orders/${order._id}`}
-                        >
-                          View Details →
+                      <td data-label="" className="is-right">
+                        <Link className="ui-btn ui-btn--secondary ui-btn--sm" to={`/dashboard/orders/${order._id}`}>
+                          View Details
+                          <Icon name="chevronRight" />
                         </Link>
                       </td>
                     </tr>
@@ -214,8 +231,8 @@ function UserOrders() {
               </tbody>
             </table>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

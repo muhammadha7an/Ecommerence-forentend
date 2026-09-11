@@ -1,72 +1,58 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-
+import Icon from '../components/Icon'
+import '../style/pages/about.css'
 
 export default function About() {
+    const [openFaq, setOpenFaq] = useState(0)
+
     const trustValues = [
         {
             id: 1,
-            icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                    <path d="m9 12 2 2 4-4"/>
-                </svg>
-            ),
+            icon: 'shieldCheck',
             title: '100% Original Products',
             desc: 'We source directly from verified distributors to ensure you always receive 100% genuine quality.'
         },
         {
             id: 2,
-            icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="6" width="20" height="12" rx="2"/>
-                    <circle cx="12" cy="12" r="2"/>
-                    <path d="M6 12h.01M18 12h.01"/>
-                </svg>
-            ),
+            icon: 'creditCard',
             title: 'Cash On Delivery',
             desc: 'Place your order without advance payment. Pay conveniently when your package arrives at your doorstep.'
         },
         {
             id: 3,
-            icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="23 4 23 10 17 10"/>
-                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-                </svg>
-            ),
+            icon: 'rotateCcw',
             title: '7-Day Easy Returns',
             desc: 'Enjoy a hassle-free 7-day return and exchange policy if you are not completely satisfied.'
         },
         {
             id: 4,
-            icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
-            ),
+            icon: 'lock',
             title: 'Secure Shopping',
             desc: 'Your personal information and payment transactions are fully encrypted and safe with us.'
         }
+    ]
+
+    const values = [
+        { icon: 'award', title: 'Quality Assurance', desc: 'Every product undergoes rigorous multi-step quality checks before being dispatched.' },
+        { icon: 'eye', title: 'Transparency', desc: 'No hidden fees or unexpected costs. What you see is exactly what you pay.' },
+        { icon: 'heart', title: 'Customer First', desc: 'Your satisfaction is our highest priority, driving everything we do.' },
     ]
 
     const testimonials = [
         {
             id: 1,
             name: 'Hamza Malik',
-            rating: '★★★★★',
             review: 'The product quality exceeded my expectations and delivery was right on time. Highly recommended!'
         },
         {
             id: 2,
             name: 'Ayesha Bibi',
-            rating: '★★★★★',
             review: 'The customer support team was extremely helpful and resolved my order query in no time.'
         },
         {
             id: 3,
             name: 'Bilal Hassan',
-            rating: '★★★★★',
             review: 'Authentic products at the best market prices. Truly impressed with the service!'
         }
     ]
@@ -86,139 +72,166 @@ export default function About() {
         }
     ]
 
+    const stats = [
+        { value: '10k+', label: 'Happy customers' },
+        { value: '5k+', label: 'Products delivered' },
+        { value: '99%', label: 'Positive ratings' },
+        { value: '24/7', label: 'Customer support' },
+    ]
+
     return (
-        <div className="about-container">
-            {/* 1. Hero Section */}
-            <section className="about-hero">
-                <h1>About Our Store</h1>
-                <p>
-                    Your trusted destination for everyday shopping — where premium quality and customer satisfaction come first.
-                </p>
-            </section>
-
-            {/* 2. Story & Mission Section */}
-            <section className="about-story-section">
-                <div className="story-content">
-                    <span className="section-subtitle">OUR JOURNEY</span>
-                    <h2>Our Story & Mission</h2>
-                    <p>
-                        We started with a simple vision: to make authentic, high-quality products accessible to everyone at unbeatable prices. Today, we proudly serve thousands of happy customers.
-                    </p>
-                    <p>
-                        Our mission is to deliver a seamless, secure, and lightning-fast shopping experience. With every order, we guarantee premium quality and exceptional service.
+        <div className="about-page">
+            {/* 1. Page header */}
+            <section className="ui-page-head">
+                <div className="aura-container">
+                    <nav className="ui-breadcrumb" aria-label="Breadcrumb">
+                        <Link to="/">Home</Link>
+                        <Icon name="chevronRight" />
+                        <span aria-current="page">About</span>
+                    </nav>
+                    <h1 className="ui-page-head__title">About our store</h1>
+                    <p className="ui-page-head__text">
+                        Your trusted destination for everyday shopping — where quality and customer satisfaction come first.
                     </p>
                 </div>
-                <div className="story-image">
-                    <img
-                        src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1000&q=80"
-                        alt="Modern E-commerce Fulfillment & Operations Center"
-                        loading="lazy"
-                    />
-                </div>
             </section>
 
-            {/* 3. Core Values Section */}
-            <section className="about-values-section">
-                <div className="section-header">
-                    <span className="section-subtitle">OUR PRINCIPLES</span>
-                    <h2>Our Core Values</h2>
-                </div>
-                <div className="values-grid">
-                    <div className="value-card">
-                        <div className="value-number">01</div>
-                        <h3>Quality Assurance</h3>
-                        <p>Every product undergoes rigorous multi-step quality checks before being dispatched.</p>
+            {/* 2. Story */}
+            <section className="about-section">
+                <div className="about-story">
+                    <div className="about-story__copy">
+                        <h2>Our story and mission</h2>
+                        <p>
+                            We started with a simple vision: to make authentic, high-quality products accessible to everyone at fair prices. Today, we proudly serve thousands of happy customers.
+                        </p>
+                        <p>
+                            Our mission is to deliver a seamless, secure and fast shopping experience. With every order, we stand behind the quality of what we sell and the service around it.
+                        </p>
+                        <dl className="about-stats">
+                            {stats.map((stat) => (
+                                <div key={stat.label}>
+                                    <dt>{stat.value}</dt>
+                                    <dd>{stat.label}</dd>
+                                </div>
+                            ))}
+                        </dl>
                     </div>
-                    <div className="value-card">
-                        <div className="value-number">02</div>
-                        <h3>Transparency</h3>
-                        <p>No hidden fees or unexpected costs. What you see is exactly what you pay.</p>
-                    </div>
-                    <div className="value-card">
-                        <div className="value-number">03</div>
-                        <h3>Customer First</h3>
-                        <p>Your satisfaction is our highest priority, driving everything we do.</p>
+                    <div className="about-story__media">
+                        <img
+                            src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1000&q=80"
+                            alt="Our fulfilment team packing orders"
+                            loading="lazy"
+                        />
                     </div>
                 </div>
             </section>
 
-            {/* 4. Stats Counter Section */}
-            <section className="about-stats-section">
-                <div className="stat-card">
-                    <h3>10k+</h3>
-                    <p>Happy Customers</p>
-                </div>
-                <div className="stat-card">
-                    <h3>5k+</h3>
-                    <p>Products Delivered</p>
-                </div>
-                <div className="stat-card">
-                    <h3>99%</h3>
-                    <p>Positive Ratings</p>
-                </div>
-                <div className="stat-card">
-                    <h3>24/7</h3>
-                    <p>Customer Support</p>
-                </div>
-            </section>
-
-            {/* 5. Trust & Shopping Guarantees */}
-            <section className="about-trust-section">
-                <div className="section-header">
-                    <span className="section-subtitle">SHOP WITH CONFIDENCE</span>
-                    <h2>Our Shopping Guarantees</h2>
-                </div>
-                <div className="trust-grid">
-                    {trustValues.map((item) => (
-                        <div className="trust-card" key={item.id}>
-                            <div className="trust-icon">{item.icon}</div>
-                            <h3>{item.title}</h3>
-                            <p>{item.desc}</p>
-                        </div>
-                    ))}
+            {/* 3. Values */}
+            <section className="about-section about-section--tinted">
+                <div className="about-inner">
+                    <div className="about-head">
+                        <h2>Our core values</h2>
+                        <p>The principles behind every product we choose and every order we ship.</p>
+                    </div>
+                    <div className="about-values">
+                        {values.map((value) => (
+                            <div className="about-value" key={value.title}>
+                                <span className="about-value__icon"><Icon name={value.icon} /></span>
+                                <h3>{value.title}</h3>
+                                <p>{value.desc}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </section>
 
-            {/* 6. Customer Reviews Section */}
-            <section className="about-reviews-section">
-                <div className="section-header">
-                    <span className="section-subtitle">TESTIMONIALS</span>
-                    <h2>What Our Customers Say</h2>
-                </div>
-                <div className="reviews-grid">
-                    {testimonials.map((item) => (
-                        <div className="review-card" key={item.id}>
-                            <div className="rating-stars">{item.rating}</div>
-                            <p className="review-text">"{item.review}"</p>
-                            <span className="reviewer-name">- {item.name}</span>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* 7. FAQ Section */}
-            <section className="about-faq-section">
-                <div className="section-header">
-                    <span className="section-subtitle">GOT QUESTIONS?</span>
-                    <h2>Frequently Asked Questions</h2>
-                </div>
-                <div className="faq-list">
-                    {faqs.map((faq, index) => (
-                        <div className="faq-card" key={index}>
-                            <h3>{faq.q}</h3>
-                            <p>{faq.a}</p>
-                        </div>
-                    ))}
+            {/* 4. Guarantees */}
+            <section className="about-section">
+                <div className="about-inner">
+                    <div className="about-head">
+                        <h2>Our shopping guarantees</h2>
+                        <p>Shop with confidence — here's what you can count on.</p>
+                    </div>
+                    <div className="about-trust">
+                        {trustValues.map((item) => (
+                            <div className="about-trust__card" key={item.id}>
+                                <span className="about-trust__icon"><Icon name={item.icon} /></span>
+                                <div>
+                                    <h3>{item.title}</h3>
+                                    <p>{item.desc}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </section>
 
-            {/* 8. Call to Action Section */}
-            <section className="about-cta-section">
-                <h2>Ready to Start Shopping?</h2>
-                <p>Explore our latest collections and discover unbeatable deals today.</p>
-                <Link to="/shop" className="btn-shop-now">
-                    Browse Shop
-                </Link>
+            {/* 5. Reviews */}
+            <section className="about-section about-section--tinted">
+                <div className="about-inner">
+                    <div className="about-head">
+                        <h2>What our customers say</h2>
+                    </div>
+                    <div className="about-reviews">
+                        {testimonials.map((item) => (
+                            <figure className="about-review" key={item.id}>
+                                <div className="about-review__stars" aria-label="5 out of 5 stars">
+                                    {[1, 2, 3, 4, 5].map((star) => <Icon key={star} name="star" filled />)}
+                                </div>
+                                <blockquote>“{item.review}”</blockquote>
+                                <figcaption>{item.name}</figcaption>
+                            </figure>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* 6. FAQ */}
+            <section className="about-section" id="faq">
+                <div className="about-inner about-faq-wrap">
+                    <div className="about-head">
+                        <h2>Frequently asked questions</h2>
+                        <p>
+                            Can't find what you're looking for? <Link to="/contact" className="ui-link">Contact our team</Link>.
+                        </p>
+                    </div>
+                    <div className="about-faq">
+                        {faqs.map((faq, index) => {
+                            const isOpen = openFaq === index
+                            return (
+                                <div className={`about-faq__item ${isOpen ? 'is-open' : ''}`} key={faq.q}>
+                                    <button
+                                        type="button"
+                                        className="about-faq__question"
+                                        onClick={() => setOpenFaq(isOpen ? -1 : index)}
+                                        aria-expanded={isOpen}
+                                        aria-controls={`faq-panel-${index}`}
+                                    >
+                                        {faq.q}
+                                        <Icon name="plus" />
+                                    </button>
+                                    <div className="about-faq__answer" id={`faq-panel-${index}`} hidden={!isOpen}>
+                                        <p>{faq.a}</p>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+            </section>
+
+            {/* 7. CTA */}
+            <section className="about-cta">
+                <div className="about-cta__inner">
+                    <div>
+                        <h2>Ready to start shopping?</h2>
+                        <p>Explore our latest collections and find something you'll use every day.</p>
+                    </div>
+                    <Link to="/shop" className="ui-btn ui-btn--accent ui-btn--lg">
+                        Browse Shop
+                        <Icon name="arrowRight" />
+                    </Link>
+                </div>
             </section>
         </div>
     )

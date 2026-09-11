@@ -4,12 +4,16 @@ import { Link } from 'react-router-dom';
 import { addToCart } from '../redux/slices/cartSlice';
 import { toggleWishlist } from '../redux/slices/wishlistSlice';
 import { getImageUrl } from '../services/api';
+import Icon from './Icon.jsx';
+import { getEffectivePrice, getStockLimit, hasSalePrice, sameProduct } from '../utils/commerce';
+import '../style/components/product-card.css';
 
 export default function ProductCard({ product }) {
   const dispatch = useDispatch();
   const [added, setAdded] = useState(false);
 
   const wishlistItems = useSelector((state) => state.wishlist.items || []);
+  const cartItems = useSelector((state) => state.cart.items || []);
 
   const isWishlisted = wishlistItems.some(
     (item) =>
@@ -19,89 +23,95 @@ export default function ProductCard({ product }) {
       (product._id && item.id && String(item.id) === String(product._id))
   );
 
+  const imageUrl = getImageUrl(product.image);
+  const productId = product.id || product._id || product.legacyId;
+  const stockLimit = getStockLimit(product);
+  const isOutOfStock = stockLimit === 0;
+  const inCart = cartItems.find((item) => sameProduct(item, product))?.quantity || 0;
+  const reachedLimit = !isOutOfStock && stockLimit !== null && inCart >= stockLimit;
+  const rating = Number(product.rating || 0);
+  const price = getEffectivePrice(product);
+
   const handleAddToCart = () => {
+    if (isOutOfStock || reachedLimit) return;
     dispatch(addToCart(product));
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
 
-  const imageUrl = getImageUrl(product.image);
-  const productId = product.id || product._id || product.legacyId;
+  const buttonLabel = isOutOfStock ? 'Out of Stock' : reachedLimit ? 'Max in cart' : added ? 'Added' : 'Add';
+  const buttonTitle = isOutOfStock
+    ? 'This product is out of stock'
+    : reachedLimit
+      ? `Only ${stockLimit} available — all of them are in your cart`
+      : 'Add to cart';
 
   return (
     <article className="product-card">
-      <div className="product-image-container">
-        {(product.isNew || product.isNewProduct) && (
-          <span className="product-badge">New</span>
-        )}
+      <div className="product-card__media">
+        <div className="product-card__badges">
+          {(product.isNew || product.isNewProduct) && (
+            <span className="product-card__badge">New</span>
+          )}
+          {isOutOfStock && (
+            <span className="product-card__badge product-card__badge--muted">Sold out</span>
+          )}
+        </div>
 
         <button
-          className={`wishlist-toggle ${isWishlisted ? 'active' : ''}`}
+          type="button"
+          className={`product-card__wish ${isWishlisted ? 'is-active' : ''}`}
           onClick={() => dispatch(toggleWishlist(product))}
           aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+          aria-pressed={isWishlisted}
         >
-          <svg
-            viewBox="0 0 24 24"
-            fill={isWishlisted ? 'currentColor' : 'none'}
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          </svg>
+          <Icon name="heart" filled={isWishlisted} />
         </button>
 
-        <Link to={`/product/${productId}`} className="product-card-link" aria-label={`View ${product.name}`}>
+        <Link to={`/product/${productId}`} className="product-card__image-link" aria-label={`View ${product.name}`}>
           <img
             src={imageUrl}
             alt={product.name}
-            className="product-img"
+            className="product-card__img"
             loading="lazy"
           />
         </Link>
       </div>
 
-      <div className="product-info">
-        <span className="product-meta">{product.category || 'Essential'}</span>
-        <h3 className="product-name">
-          <Link to={`/product/${productId}`} className="product-card-link">{product.name}</Link>
+      <div className="product-card__body">
+        <div className="product-card__meta">
+          <span className="product-card__category">{product.category || 'Essential'}</span>
+          {rating > 0 && (
+            <span className="product-card__rating" aria-label={`Rated ${rating.toFixed(1)} out of 5`}>
+              <Icon name="star" filled />
+              {rating.toFixed(1)}
+            </span>
+          )}
+        </div>
+
+        <h3 className="product-card__name">
+          <Link to={`/product/${productId}`}>{product.name}</Link>
         </h3>
 
-        <div className="product-action-row">
-          <span className="product-price">
-            ${product.price ? Number(product.price).toFixed(2) : '0.00'}
+        <div className="product-card__footer">
+          <span className="product-card__price">
+            ${price.toFixed(2)}
+            {hasSalePrice(product) && (
+              <s className="product-card__price-was">${Number(product.price).toFixed(2)}</s>
+            )}
           </span>
 
           <button
-            className={`add-cart-btn ${added ? 'success' : ''}`}
+            type="button"
+            className={`product-card__add ${added ? 'is-added' : ''} ${isOutOfStock ? 'is-soldout' : ''}`}
             onClick={handleAddToCart}
+            disabled={isOutOfStock || reachedLimit}
+            title={buttonTitle}
+            aria-label={`${buttonLabel}: ${product.name}`}
+            aria-live="polite"
           >
-            {added ? (
-              <>
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                Added
-              </>
-            ) : (
-              <>
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                  <line x1="3" y1="6" x2="21" y2="6"></line>
-                  <path d="M16 10a4 4 0 0 1-8 0"></path>
-                </svg>
-                Add
-              </>
-            )}
+            {!isOutOfStock && <Icon name={added ? 'check' : 'bag'} />}
+            <span>{buttonLabel}</span>
           </button>
         </div>
       </div>

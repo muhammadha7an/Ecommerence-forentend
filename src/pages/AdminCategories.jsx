@@ -8,6 +8,9 @@ import {
   updateCategoryLocally,
   removeCategoryLocally,
 } from "../redux/slices/categoriesSlice";
+import Icon from "../components/Icon";
+import EmptyState from "../components/EmptyState";
+import Modal from "../components/Modal";
 
 function AdminCategories() {
   const navigate = useNavigate();
@@ -33,6 +36,7 @@ function AdminCategories() {
   // Delete modal state
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   const loadCategories = useCallback(async () => {
     setLoading(true);
@@ -84,8 +88,15 @@ function AdminCategories() {
   };
 
   const handleImageUpload = async (e) => {
-    const file = e.target.files?.[0];
+    const input = e.target;
+    const file = input.files?.[0];
     if (!file) return;
+
+    if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type) || file.size > 5 * 1024 * 1024) {
+      setFormError("Please choose a JPG, PNG, WEBP or GIF image up to 5MB.");
+      input.value = "";
+      return;
+    }
 
     const formData = new FormData();
     formData.append("image", file);
@@ -93,7 +104,7 @@ function AdminCategories() {
     setUploading(true);
     setFormError("");
     try {
-      const res = await authService.uploadImage(formData);
+      const res = await authService.uploadImage(formData, "categories");
       if (res.success && res.url) {
         setActiveCategory((prev) => ({ ...prev, image: res.url }));
       }
@@ -103,6 +114,7 @@ function AdminCategories() {
       );
     } finally {
       setUploading(false);
+      input.value = "";
     }
   };
 
@@ -152,6 +164,7 @@ function AdminCategories() {
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
+    setDeleteError("");
     try {
       const targetId = deleteTarget._id || deleteTarget.id;
       await authService.deleteCategory(targetId);
@@ -161,68 +174,88 @@ function AdminCategories() {
       setDeleteTarget(null);
       setTimeout(() => setFeedback(""), 4000);
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete category");
+      setDeleteError(err.response?.data?.message || "Failed to delete category");
     } finally {
       setDeleting(false);
     }
   };
 
   return (
-    <div className="dashboard-page">
-      <div className="dashboard-container">
-        {/* Header */}
-        <div className="dashboard-header">
-          <div>
-            <span className="dashboard-welcome">Catalog Organization</span>
-            <h1>Categories ({categories.length})</h1>
-            <p>Define product groupings, cover imagery, and storefront filters</p>
-          </div>
-
-          <div className="dashboard-actions">
-            <button className="dashboard-view-btn" onClick={openCreateModal}>
-              + Add New Category
-            </button>
-          </div>
+    <div className="console-page">
+      {/* Header */}
+      <div className="console-head">
+        <div>
+          <span className="console-head__eyebrow">Catalog organization</span>
+          <h1>
+            Categories <span className="console-count">{categories.length}</span>
+          </h1>
+          <p>Define product groupings, cover imagery and storefront filters.</p>
         </div>
 
-        {feedback && <div className="alert-message success-message">{feedback}</div>}
-        {error && <div className="dashboard-panel dashboard-error">{error}</div>}
-
-        {/* Search */}
-        <div className="admin-toolbar-row">
-          <div className="admin-search-input">
-            <input
-              type="text"
-              placeholder="Search categories..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+        <div className="console-head__actions">
+          <button type="button" className="ui-btn" onClick={openCreateModal}>
+            <Icon name="plus" />
+            Add New Category
+          </button>
         </div>
+      </div>
 
-        {loading ? (
-          <div className="dashboard-loading">
-            <div className="dashboard-spinner"></div>
+      {feedback && (
+        <div className="ui-alert ui-alert--success" role="status">
+          <Icon name="checkCircle" />
+          <span>{feedback}</span>
+        </div>
+      )}
+      {error && (
+        <div className="ui-alert ui-alert--error" role="alert">
+          <Icon name="alertCircle" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Search */}
+      <div className="console-toolbar">
+        <label className="ui-input-icon">
+          <Icon name="search" />
+          <span className="visually-hidden">Search categories</span>
+          <input
+            type="search"
+            className="ui-input"
+            placeholder="Search categories..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </label>
+      </div>
+
+      {loading ? (
+        <div className="console-panel">
+          <div className="ui-loading">
+            <span className="ui-spinner ui-spinner--lg" aria-hidden="true"></span>
             <p>Loading categories...</p>
           </div>
-        ) : filteredCategories.length === 0 ? (
-          <div className="dashboard-empty-panel">
-            <div className="dashboard-empty-icon">📁</div>
-            <h2>No categories found</h2>
-            <p>Add your first category to start classifying items.</p>
-            <button className="dashboard-view-btn" onClick={openCreateModal}>
-              Create Category
-            </button>
-          </div>
-        ) : (
-          <div className="dashboard-panel order-table-wrap">
-            <table className="dashboard-table admin-categories-table">
+        </div>
+      ) : filteredCategories.length === 0 ? (
+        <EmptyState
+          icon="folder"
+          title="No categories found"
+          text={categories.length === 0 ? "Add your first category to start organizing products." : "No categories match your search."}
+        >
+          <button type="button" className="ui-btn" onClick={openCreateModal}>
+            <Icon name="plus" />
+            Create Category
+          </button>
+        </EmptyState>
+      ) : (
+        <div className="console-panel">
+          <div className="console-table-wrap">
+            <table className="console-table console-table--stack">
               <thead>
                 <tr>
                   <th>Category</th>
                   <th>Description</th>
-                  <th>Linked Products</th>
-                  <th>Actions</th>
+                  <th>Linked products</th>
+                  <th className="is-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -232,47 +265,53 @@ function AdminCategories() {
 
                   return (
                     <tr key={catId}>
-                      <td>
-                        <div className="table-product-cell">
+                      <td className="is-primary" data-label="Category">
+                        <div className="console-cell">
                           <img
                             src={img}
                             alt={cat.name}
-                            className="product-table-thumb"
+                            className="console-thumb"
                             onError={(e) => {
                               e.target.src =
                                 "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=100&q=80";
                             }}
                           />
-                          <div>
+                          <div className="console-cell__stack">
                             <strong>{cat.name}</strong>
                           </div>
                         </div>
                       </td>
-                      <td>
-                        <span className="text-muted">
+                      <td data-label="Description" style={{ maxWidth: 360 }}>
+                        <span className="console-muted" style={{ fontSize: "inherit" }}>
                           {cat.description || "No description set"}
                         </span>
                       </td>
-                      <td>
-                        <span className="badge-pill count-badge">
+                      <td data-label="Products">
+                        <span className="ui-badge ui-badge--sage">
                           {cat.productCount ?? "—"} products
                         </span>
                       </td>
-                      <td>
-                        <div className="table-actions-cell">
+                      <td data-label="" className="is-right">
+                        <div className="console-actions">
                           <button
                             type="button"
-                            className="btn-action-edit"
+                            className="ui-btn ui-btn--secondary ui-btn--sm"
                             onClick={() => openEditModal(cat)}
                           >
+                            <Icon name="edit" />
                             Edit
                           </button>
                           <button
                             type="button"
-                            className="btn-action-delete"
-                            onClick={() => setDeleteTarget(cat)}
+                            className="ui-btn ui-btn--danger-soft ui-btn--sm ui-btn--icon"
+                            onClick={() => {
+                              setDeleteError("");
+                              setDeleteTarget(cat);
+                            }}
+                            aria-label={`Delete ${cat.name}`}
+                            title="Delete"
                           >
-                            Delete
+                            <Icon name="trash" />
                           </button>
                         </div>
                       </td>
@@ -282,138 +321,182 @@ function AdminCategories() {
               </tbody>
             </table>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Add / Edit Category Modal */}
-        {modalMode && (
-          <div className="modal-backdrop">
-            <div className="modal-card">
-              <h3>{modalMode === "create" ? "Create New Category" : "Edit Category"}</h3>
-
-              {formError && <div className="alert-message error-message">{formError}</div>}
-
-              <form onSubmit={handleSaveCategory} className="modal-form">
-                <div className="form-group">
-                  <label htmlFor="cat-name">Category Name *</label>
-                  <input
-                    id="cat-name"
-                    type="text"
-                    value={activeCategory.name}
-                    onChange={(e) =>
-                      setActiveCategory({ ...activeCategory, name: e.target.value })
-                    }
-                    placeholder="e.g. Living Room Decor"
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="cat-desc">Description</label>
-                  <textarea
-                    id="cat-desc"
-                    rows="3"
-                    value={activeCategory.description}
-                    onChange={(e) =>
-                      setActiveCategory({ ...activeCategory, description: e.target.value })
-                    }
-                    placeholder="Brief overview of items in this category..."
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Category Cover Image</label>
-                  <div className="image-preview-box mini">
-                    {activeCategory.image ? (
-                      <img
-                        src={getImageUrl(activeCategory.image)}
-                        alt="Preview"
-                        onError={(e) => (e.target.style.display = "none")}
-                      />
-                    ) : (
-                      <span className="text-muted">No image</span>
-                    )}
-                  </div>
-
-                  <div className="upload-dropzone">
-                    <label className="upload-file-button" htmlFor="cat-file-input">
-                      {uploading ? "Uploading..." : "Upload Cover Image"}
-                    </label>
-                    <input
-                      id="cat-file-input"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      disabled={uploading}
-                      style={{ display: "none" }}
-                    />
-                  </div>
-
-                  <input
-                    type="text"
-                    placeholder="Or enter image URL..."
-                    value={activeCategory.image}
-                    onChange={(e) =>
-                      setActiveCategory({ ...activeCategory, image: e.target.value })
-                    }
-                    style={{ marginTop: "8px" }}
-                  />
-                </div>
-
-                <div className="modal-actions">
-                  <button
-                    type="button"
-                    className="dashboard-outline-btn"
-                    onClick={() => setModalMode(null)}
-                    disabled={saving || uploading}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="dashboard-view-btn"
-                    disabled={saving || uploading}
-                  >
-                    {saving ? "Saving..." : "Save Category"}
-                  </button>
-                </div>
-              </form>
+      {/* Create / Edit modal */}
+      {modalMode && (
+        <Modal
+          title={modalMode === "create" ? "Create new category" : "Edit category"}
+          subtitle="Categories appear as filters and collections on the storefront."
+          locked={saving || uploading}
+          onClose={() => setModalMode(null)}
+          footer={
+            <>
+              <button
+                type="button"
+                className="ui-btn ui-btn--secondary"
+                onClick={() => setModalMode(null)}
+                disabled={saving || uploading}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="category-form"
+                className="ui-btn"
+                disabled={saving || uploading}
+              >
+                {saving ? (
+                  <>
+                    <span className="ui-spinner" aria-hidden="true"></span>
+                    Saving...
+                  </>
+                ) : (
+                  "Save Category"
+                )}
+              </button>
+            </>
+          }
+        >
+          {formError && (
+            <div className="ui-alert ui-alert--error" role="alert">
+              <Icon name="alertCircle" />
+              <span>{formError}</span>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Delete Confirmation Modal */}
-        {deleteTarget && (
-          <div className="modal-backdrop">
-            <div className="modal-card">
-              <h3>Delete Category</h3>
-              <p>
-                Are you sure you want to delete <strong>"{deleteTarget.name}"</strong>?
-              </p>
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="dashboard-outline-btn"
-                  onClick={() => setDeleteTarget(null)}
-                  disabled={deleting}
+          <form id="category-form" onSubmit={handleSaveCategory} className="console-form-fields">
+            <div className="ui-field">
+              <label className="ui-label" htmlFor="cat-name">
+                <span>Category name <span className="ui-required">*</span></span>
+              </label>
+              <input
+                id="cat-name"
+                className="ui-input"
+                type="text"
+                value={activeCategory.name}
+                onChange={(e) =>
+                  setActiveCategory({ ...activeCategory, name: e.target.value })
+                }
+                placeholder="e.g. Living Room Decor"
+                required
+              />
+            </div>
+
+            <div className="ui-field">
+              <label className="ui-label" htmlFor="cat-desc">Description</label>
+              <textarea
+                id="cat-desc"
+                className="ui-textarea"
+                rows="3"
+                value={activeCategory.description}
+                onChange={(e) =>
+                  setActiveCategory({ ...activeCategory, description: e.target.value })
+                }
+                placeholder="Brief overview of items in this category..."
+              />
+            </div>
+
+            <div className="ui-field">
+              <span className="ui-label">Cover image</span>
+              <div className="console-uploader">
+                <div className="console-uploader__preview console-uploader__preview--sm">
+                  {activeCategory.image ? (
+                    <img
+                      src={getImageUrl(activeCategory.image)}
+                      alt="Preview"
+                      onError={(e) => (e.target.style.display = "none")}
+                    />
+                  ) : (
+                    <div className="console-uploader__empty">
+                      <Icon name="image" />
+                      <span>No image</span>
+                    </div>
+                  )}
+                </div>
+
+                <label
+                  className={`console-uploader__drop ${uploading ? "is-busy" : ""}`}
+                  htmlFor="cat-file-input"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="dashboard-logout-btn"
-                  onClick={confirmDelete}
-                  disabled={deleting}
-                >
-                  {deleting ? "Deleting..." : "Yes, Delete Category"}
-                </button>
+                  {uploading ? <span className="ui-spinner" aria-hidden="true"></span> : <Icon name="upload" />}
+                  {uploading ? "Uploading..." : "Upload cover image"}
+                </label>
+                <input
+                  id="cat-file-input"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={handleImageUpload}
+                  disabled={uploading}
+                  className="visually-hidden"
+                />
+
+                <input
+                  type="text"
+                  className="ui-input"
+                  placeholder="Or enter image URL..."
+                  aria-label="Cover image URL"
+                  value={activeCategory.image}
+                  onChange={(e) =>
+                    setActiveCategory({ ...activeCategory, image: e.target.value })
+                  }
+                />
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Delete confirmation */}
+      {deleteTarget && (
+        <Modal
+          title="Delete category"
+          subtitle="Products keep their category text, but the category is removed from filters."
+          icon="trash"
+          locked={deleting}
+          onClose={() => setDeleteTarget(null)}
+          footer={
+            <>
+              <button
+                type="button"
+                className="ui-btn ui-btn--secondary"
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="ui-btn ui-btn--danger"
+                onClick={confirmDelete}
+                disabled={deleting}
+              >
+                {deleting ? (
+                  <>
+                    <span className="ui-spinner" aria-hidden="true"></span>
+                    Deleting...
+                  </>
+                ) : (
+                  "Yes, Delete Category"
+                )}
+              </button>
+            </>
+          }
+        >
+          {deleteError && (
+            <div className="ui-alert ui-alert--error" role="alert">
+              <Icon name="alertCircle" />
+              <span>{deleteError}</span>
+            </div>
+          )}
+          <p>
+            Are you sure you want to delete <strong>"{deleteTarget.name}"</strong>?
+          </p>
+        </Modal>
+      )}
     </div>
   );
 }
 
 export default AdminCategories;
-

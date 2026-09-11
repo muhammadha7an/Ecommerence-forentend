@@ -2,7 +2,12 @@ import { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useSearchParams, Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
- 
+import Icon from '../components/Icon';
+import EmptyState from '../components/EmptyState';
+import { useFreeShippingThreshold } from '../hooks/useShipping';
+import { freeShippingPhrase } from '../utils/commerce';
+import '../style/pages/shop.css';
+
 const emptyList = [];
 
 export default function Shop() {
@@ -13,6 +18,8 @@ export default function Shop() {
   const categories = useSelector((state) => state.categories.items) ?? emptyList;
   const categoriesLoading = useSelector((state) => state.categories.loading);
   const categoriesError = useSelector((state) => state.categories.error);
+  const productsLoading = useSelector((state) => state.products.loading);
+  const freeShippingThreshold = useFreeShippingThreshold();
 
   // Filter States
   const categoryParam = searchParams.get('category') || 'all';
@@ -131,6 +138,26 @@ export default function Shop() {
       });
   }, [products, selectedCategory, selectedCategoryRecord, searchTerm, priceRange, inStockOnly, sortBy]);
 
+  // Close the mobile filter panel with Escape and lock page scroll while open
+  useEffect(() => {
+    if (!isMobileFilterOpen) return undefined;
+    const onKey = (event) => {
+      if (event.key === 'Escape') setIsMobileFilterOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    document.body.classList.add('is-scroll-locked');
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.classList.remove('is-scroll-locked');
+    };
+  }, [isMobileFilterOpen]);
+
+  const activeFilterCount =
+    (selectedCategory !== 'all' ? 1 : 0) +
+    (searchTerm ? 1 : 0) +
+    (priceRange < 1000 ? 1 : 0) +
+    (inStockOnly ? 1 : 0);
+
   // Pagination Logic
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const paginatedProducts = useMemo(() => {
@@ -140,258 +167,313 @@ export default function Shop() {
 
   return (
     <div className="shop-page">
-      {/* 1. HERO & BREADCRUMB SECTION */}
-      <section className="shop-hero">
-        <div className="shop-hero-container">
-          <nav className="breadcrumb">
+      {/* 1. PAGE HEADER */}
+      <section className="ui-page-head">
+        <div className="aura-container">
+          <nav className="ui-breadcrumb" aria-label="Breadcrumb">
             <Link to="/">Home</Link>
-            <span>/</span>
-            <span className="current">Shop Collection</span>
+            <Icon name="chevronRight" />
+            <span aria-current="page">Shop</span>
           </nav>
-          <h1>Explore Our Catalog</h1>
-          <p>Discover thoughtful, high-quality home essentials designed for everyday living.</p>
+          <h1 className="ui-page-head__title">
+            {selectedCategoryRecord ? selectedCategoryRecord.name : 'Explore our catalog'}
+          </h1>
+          <p className="ui-page-head__text">
+            {selectedCategoryRecord?.description ||
+              'Discover thoughtful, high-quality home essentials designed for everyday living.'}
+          </p>
 
-          {/* Quick Category Bar */}
-          <div className="quick-category-pills">
+          {/* Quick category bar */}
+          <div className="shop-pills" role="tablist" aria-label="Quick categories">
             <button
-              className={`pill ${selectedCategory === 'all' ? 'active' : ''}`}
+              type="button"
+              className={`shop-pill ${selectedCategory === 'all' ? 'is-active' : ''}`}
               onClick={() => handleCategoryChange('all')}
             >
-              All Items
+              All items
             </button>
             {categories.map((cat) => {
               const categoryValue = cat.id || cat._id || cat.legacyId || cat.name;
 
               return (
-              <button
-                key={categoryValue}
-                className={`pill ${String(selectedCategory) === String(categoryValue) ? 'active' : ''}`}
-                onClick={() => handleCategoryChange(categoryValue)}
-              >
-                {cat.name}
-              </button>
+                <button
+                  type="button"
+                  key={categoryValue}
+                  className={`shop-pill ${String(selectedCategory) === String(categoryValue) ? 'is-active' : ''}`}
+                  onClick={() => handleCategoryChange(categoryValue)}
+                >
+                  {cat.name}
+                </button>
               );
             })}
           </div>
         </div>
       </section>
 
-      {/* 2. MAIN SHOP CONTENT (FILTERS + PRODUCTS) */}
-      <div className="shop-layout-container">
-        {/* Sidebar Overlay for Mobile */}
-        {isMobileFilterOpen && (
-          <div
-            className="filter-overlay"
-            onClick={() => setIsMobileFilterOpen(false)}
-          ></div>
-        )}
+      {/* 2. FILTERS + PRODUCTS */}
+      <div className="shop-layout">
+        {/* Overlay for mobile filter drawer */}
+        <div
+          className={`shop-filter-overlay ${isMobileFilterOpen ? 'is-open' : ''}`}
+          onClick={() => setIsMobileFilterOpen(false)}
+          aria-hidden="true"
+        />
 
         {/* FILTER SIDEBAR */}
-        <aside className={`filter-sidebar ${isMobileFilterOpen ? 'open' : ''}`}>
-          <div className="sidebar-header">
-            <h3>Filter Products</h3>
+        <aside className={`shop-filters ${isMobileFilterOpen ? 'is-open' : ''}`} aria-label="Product filters">
+          <div className="shop-filters__head">
+            <h2>Filters</h2>
             <button
-              className="close-mobile-filter"
+              type="button"
+              className="ui-btn ui-btn--ghost ui-btn--icon ui-btn--sm shop-filters__close"
               onClick={() => setIsMobileFilterOpen(false)}
+              aria-label="Close filters"
             >
-              ✕
+              <Icon name="close" />
             </button>
           </div>
 
-          {/* Search Box */}
-          <div className="filter-group">
-            <label className="filter-label">Search</label>
-            <div className="search-input-wrapper">
+          <div className="shop-filters__body">
+            {/* Search */}
+            <div className="shop-filter">
+              <label className="shop-filter__label" htmlFor="shop-search">Search</label>
+              <div className="ui-input-icon">
+                <Icon name="search" />
+                <input
+                  id="shop-search"
+                  type="search"
+                  className="ui-input"
+                  placeholder="Search products..."
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                />
+              </div>
+            </div>
+
+            {/* Categories */}
+            <div className="shop-filter">
+              <span className="shop-filter__label">Categories</span>
+              <ul className="shop-cat-list">
+                <li>
+                  <button
+                    type="button"
+                    className={selectedCategory === 'all' ? 'is-active' : ''}
+                    onClick={() => handleCategoryChange('all')}
+                  >
+                    <span>All categories</span>
+                    <span className="shop-cat-list__count">{products.length}</span>
+                  </button>
+                </li>
+                {categoriesLoading && <li className="shop-cat-list__message">Loading categories...</li>}
+                {!categoriesLoading && categoriesError && (
+                  <li className="shop-cat-list__message">Unable to load categories.</li>
+                )}
+                {!categoriesLoading && !categoriesError && categories.length === 0 && (
+                  <li className="shop-cat-list__message">No categories available.</li>
+                )}
+                {!categoriesLoading && !categoriesError && categories.map((cat) => {
+                  const categoryValue = cat.id || cat._id || cat.legacyId || cat.name;
+                  const count = products.filter((product) => categoryMatchesProduct(product, cat)).length;
+
+                  return (
+                    <li key={categoryValue}>
+                      <button
+                        type="button"
+                        className={String(selectedCategory) === String(categoryValue) ? 'is-active' : ''}
+                        onClick={() => handleCategoryChange(categoryValue)}
+                      >
+                        <span>{cat.name}</span>
+                        <span className="shop-cat-list__count">{count}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+
+            {/* Price */}
+            <div className="shop-filter">
+              <div className="shop-filter__row">
+                <label className="shop-filter__label" htmlFor="shop-price">Max price</label>
+                <span className="shop-filter__value">${priceRange}</span>
+              </div>
               <input
-                type="text"
-                placeholder="Search products..."
-                value={searchTerm}
-                onChange={handleSearchChange}
+                id="shop-price"
+                type="range"
+                min="10"
+                max="1000"
+                step="10"
+                value={priceRange}
+                onChange={(e) => setPriceRange(Number(e.target.value))}
+                className="shop-range"
+                style={{ '--range-fill': `${((priceRange - 10) / 990) * 100}%` }}
               />
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
+              <div className="shop-filter__minmax">
+                <span>$10</span>
+                <span>$1000</span>
+              </div>
+            </div>
+
+            {/* Stock */}
+            <div className="shop-filter">
+              <label className="ui-check">
+                <input
+                  type="checkbox"
+                  checked={inStockOnly}
+                  onChange={(e) => setInStockOnly(e.target.checked)}
+                />
+                <span>In stock only</span>
+              </label>
             </div>
           </div>
 
-          {/* Categories List */}
-          <div className="filter-group">
-            <label className="filter-label">Categories</label>
-            <ul className="category-list">
-              <li>
-                <button
-                  className={selectedCategory === 'all' ? 'active' : ''}
-                  onClick={() => handleCategoryChange('all')}
-                >
-                  <span>All Categories</span>
-                  <span className="count">{products.length}</span>
-                </button>
-              </li>
-              {categoriesLoading && <li className="category-list-message">Loading categories...</li>}
-              {!categoriesLoading && categoriesError && (
-                <li className="category-list-message">Unable to load categories.</li>
-              )}
-              {!categoriesLoading && !categoriesError && categories.length === 0 && (
-                <li className="category-list-message">No categories available.</li>
-              )}
-              {!categoriesLoading && !categoriesError && categories.map((cat) => {
-                const categoryValue = cat.id || cat._id || cat.legacyId || cat.name;
-                const count = products.filter((product) => categoryMatchesProduct(product, cat)).length;
-
-                return (
-                  <li key={categoryValue}>
-                    <button
-                      className={String(selectedCategory) === String(categoryValue) ? 'active' : ''}
-                      onClick={() => handleCategoryChange(categoryValue)}
-                    >
-                      <span>{cat.name}</span>
-                      <span className="count">{count}</span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+          <div className="shop-filters__foot">
+            <button type="button" className="ui-btn ui-btn--secondary ui-btn--block" onClick={handleResetFilters}>
+              <Icon name="rotateCcw" />
+              Reset all filters
+            </button>
+            <button
+              type="button"
+              className="ui-btn ui-btn--block shop-filters__apply"
+              onClick={() => setIsMobileFilterOpen(false)}
+            >
+              Show {filteredProducts.length} products
+            </button>
           </div>
-
-          {/* Price Range Slider */}
-          <div className="filter-group">
-            <div className="price-label-row">
-              <label className="filter-label">Max Price</label>
-              <span className="price-value">${priceRange}</span>
-            </div>
-            <input
-              type="range"
-              min="10"
-              max="1000"
-              step="10"
-              value={priceRange}
-              onChange={(e) => setPriceRange(Number(e.target.value))}
-              className="price-slider"
-            />
-            <div className="price-min-max">
-              <span>$10</span>
-              <span>$1000</span>
-            </div>
-          </div>
-
-          {/* Stock Filter Checkbox */}
-          <div className="filter-group">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={inStockOnly}
-                onChange={(e) => setInStockOnly(e.target.checked)}
-              />
-              <span>In Stock Only</span>
-            </label>
-          </div>
-
-          {/* Reset Button */}
-          <button className="btn btn-outline btn-reset" onClick={handleResetFilters}>
-            Reset All Filters
-          </button>
         </aside>
 
-        {/* PRODUCT DISPLAY AREA */}
-        <main className="shop-main">
-          {/* Top Control Bar */}
+        {/* PRODUCT AREA */}
+        <section className="shop-main" aria-label="Products">
           <div className="shop-toolbar">
-            <div className="results-count">
-              Showing <strong>{filteredProducts.length}</strong> products
-            </div>
+            <p className="shop-toolbar__count">
+              Showing <strong>{filteredProducts.length}</strong> {filteredProducts.length === 1 ? 'product' : 'products'}
+              {productsLoading && (
+                <span className="shop-toolbar__sync">
+                  <span className="ui-spinner" aria-hidden="true" />
+                  Updating
+                </span>
+              )}
+            </p>
 
-            <div className="toolbar-actions">
+            <div className="shop-toolbar__actions">
               <button
-                className="btn-mobile-filter-trigger"
+                type="button"
+                className="ui-btn ui-btn--secondary ui-btn--sm shop-filter-trigger"
                 onClick={() => setIsMobileFilterOpen(true)}
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                </svg>
+                <Icon name="sliders" />
                 Filters
+                {activeFilterCount > 0 && <span className="shop-filter-trigger__count">{activeFilterCount}</span>}
               </button>
 
-              <div className="sort-dropdown">
-                <label>Sort by:</label>
-                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <label className="shop-sort">
+                <span>Sort by</span>
+                <select
+                  className="ui-select ui-select--sm"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                >
                   <option value="featured">Featured</option>
                   <option value="price-low">Price: Low to High</option>
                   <option value="price-high">Price: High to Low</option>
                   <option value="rating">Highest Rated</option>
                   <option value="newest">New Arrivals</option>
                 </select>
-              </div>
+              </label>
             </div>
           </div>
 
-          {/* Product Grid / Empty State */}
-          {paginatedProducts.length > 0 ? (
-            <div className="shop-product-grid">
+          {/* Grid / skeleton / empty */}
+          {productsLoading && products.length === 0 ? (
+            <div className="shop-grid" aria-busy="true">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="shop-skeleton">
+                  <div className="ui-skeleton shop-skeleton__img" />
+                  <div className="ui-skeleton shop-skeleton__line" />
+                  <div className="ui-skeleton shop-skeleton__line shop-skeleton__line--short" />
+                </div>
+              ))}
+            </div>
+          ) : paginatedProducts.length > 0 ? (
+            <div className="shop-grid">
               {paginatedProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id || product._id} product={product} />
               ))}
             </div>
           ) : (
-            <div className="empty-shop-state">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                <line x1="8" y1="11" x2="14" y2="11"></line>
-              </svg>
-              <h3>No products found</h3>
-              <p>Try adjusting your search or filter options to find what you are looking for.</p>
-              <button className="btn btn-primary" onClick={handleResetFilters}>
-                Clear All Filters
+            <EmptyState
+              icon="search"
+              title="No products found"
+              text="Try a different search term, widen the price range or clear your filters."
+            >
+              <button type="button" className="ui-btn" onClick={handleResetFilters}>
+                Clear all filters
               </button>
-            </div>
+            </EmptyState>
           )}
 
-          {/* Pagination Controls */}
+          {/* Pagination */}
           {totalPages > 1 && (
-            <div className="pagination">
+            <nav className="shop-pagination" aria-label="Pagination">
               <button
-                className="page-btn"
+                type="button"
+                className="shop-page-btn shop-page-btn--nav"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((prev) => prev - 1)}
               >
-                Previous
+                <Icon name="chevronLeft" />
+                <span>Previous</span>
               </button>
-              {[...Array(totalPages)].map((_, index) => (
-                <button
-                  key={index + 1}
-                  className={`page-btn ${currentPage === index + 1 ? 'active' : ''}`}
-                  onClick={() => setCurrentPage(index + 1)}
-                >
-                  {index + 1}
-                </button>
-              ))}
+              <div className="shop-pagination__pages">
+                {[...Array(totalPages)].map((_, index) => (
+                  <button
+                    type="button"
+                    key={index + 1}
+                    className={`shop-page-btn ${currentPage === index + 1 ? 'is-active' : ''}`}
+                    onClick={() => setCurrentPage(index + 1)}
+                    aria-current={currentPage === index + 1 ? 'page' : undefined}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+              </div>
               <button
-                className="page-btn"
+                type="button"
+                className="shop-page-btn shop-page-btn--nav"
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((prev) => prev + 1)}
               >
-                Next
+                <span>Next</span>
+                <Icon name="chevronRight" />
               </button>
-            </div>
+            </nav>
           )}
-        </main>
+        </section>
       </div>
 
-      {/* 3. EXTRA FEATURE: SHOPPING GUARANTEE STRIP */}
-      <section className="shop-guarantee-strip">
-        <div className="guarantee-container">
-          <div className="guarantee-card">
-            <h4>Free Shipping</h4>
-            <p>On all domestic orders over $75</p>
+      {/* 3. SHOPPING GUARANTEE STRIP */}
+      <section className="shop-guarantees">
+        <div className="shop-guarantees__inner">
+          <div className="shop-guarantee">
+            <Icon name="truck" />
+            <div>
+              <h4>Free Shipping</h4>
+              <p>Free delivery {freeShippingPhrase(freeShippingThreshold)}</p>
+            </div>
           </div>
-          <div className="guarantee-card">
-            <h4>Safe Packaging</h4>
-            <p>100% recyclable, damage-proof packing</p>
+          <div className="shop-guarantee">
+            <Icon name="package" />
+            <div>
+              <h4>Safe Packaging</h4>
+              <p>100% recyclable, damage-proof packing</p>
+            </div>
           </div>
-          <div className="guarantee-card">
-            <h4>30-Day Returns</h4>
-            <p>No questions asked return policy</p>
+          <div className="shop-guarantee">
+            <Icon name="rotateCcw" />
+            <div>
+              <h4>30-Day Returns</h4>
+              <p>No questions asked return policy</p>
+            </div>
           </div>
         </div>
       </section>

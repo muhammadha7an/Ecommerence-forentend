@@ -7,6 +7,9 @@ import {
   addProductLocally,
   updateProductLocally,
 } from "../redux/slices/productsSlice";
+import Icon from "../components/Icon";
+import StatusBadge from "../components/StatusBadge";
+import { LOW_STOCK_LEVEL } from "../utils/commerce";
 
 function AdminProductForm() {
   const { id } = useParams();
@@ -99,10 +102,23 @@ function AdminProductForm() {
 
   // Image Upload Handler
   const handleImageFileChange = async (e) => {
-    const file = e.target.files?.[0];
+    const input = e.target;
+    const file = input.files?.[0];
     if (!file) return;
 
-    // Show local preview immediately
+    if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type)) {
+      setError("Please choose a JPG, PNG, WEBP or GIF image.");
+      input.value = "";
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image is too large. Maximum size is 5MB.");
+      input.value = "";
+      return;
+    }
+
+    // Show a local preview immediately; keep the current image until the upload succeeds.
+    const previousImage = form.image;
     const localBlob = URL.createObjectURL(file);
     setPreviewUrl(localBlob);
 
@@ -113,18 +129,23 @@ function AdminProductForm() {
     setError("");
 
     try {
-      const uploadRes = await authService.uploadImage(formData);
+      const uploadRes = await authService.uploadImage(formData, "products");
       if (uploadRes.success && uploadRes.url) {
         setForm((prev) => ({ ...prev, image: uploadRes.url }));
         setPreviewUrl(uploadRes.url);
+      } else {
+        throw new Error("Upload did not return an image URL");
       }
     } catch (err) {
+      setPreviewUrl(previousImage || "");
       setError(
         err.response?.data?.message ||
           "Image upload failed. You can paste an image URL manually."
       );
     } finally {
+      URL.revokeObjectURL(localBlob);
       setUploading(false);
+      input.value = "";
     }
   };
 
@@ -182,9 +203,9 @@ function AdminProductForm() {
 
   if (loading) {
     return (
-      <div className="dashboard-page">
-        <div className="dashboard-loading">
-          <div className="dashboard-spinner"></div>
+      <div className="console-page">
+        <div className="ui-loading">
+          <span className="ui-spinner ui-spinner--lg" aria-hidden="true"></span>
           <p>Loading product details...</p>
         </div>
       </div>
@@ -192,35 +213,49 @@ function AdminProductForm() {
   }
 
   return (
-    <div className="dashboard-page">
-      <div className="dashboard-container">
-        {/* Header */}
-        <div className="dashboard-header">
-          <div>
-            <span className="dashboard-welcome">Catalog Editing</span>
-            <h1>{isEditing ? `Edit Product` : `Add New Product`}</h1>
-            <p>Fill in product attributes, inventory numbers, and upload photography</p>
-          </div>
-
-          <div className="dashboard-actions">
-            <Link className="dashboard-outline-btn" to="/admin/products">
-              ← Cancel & Back
-            </Link>
-          </div>
+    <div className="console-page">
+      {/* Header */}
+      <div className="console-head">
+        <div>
+          <span className="console-head__eyebrow">Catalog editing</span>
+          <h1>{isEditing ? "Edit product" : "Add new product"}</h1>
+          <p>Fill in product details, inventory and photography.</p>
         </div>
 
-        {error && <div className="alert-message error-message">{error}</div>}
+        <div className="console-head__actions">
+          <Link className="ui-btn ui-btn--secondary" to="/admin/products">
+            <Icon name="arrowLeft" />
+            Back to Products
+          </Link>
+        </div>
+      </div>
 
-        {/* Product Form Card */}
-        <div className="dashboard-panel">
-          <form className="admin-product-form" onSubmit={handleSubmit}>
-            <div className="product-form-layout">
-              {/* Left Column: Details */}
-              <div className="form-col-details">
-                <div className="form-group">
-                  <label htmlFor="prod-name">Product Name *</label>
+      {error && (
+        <div className="ui-alert ui-alert--error" role="alert">
+          <Icon name="alertCircle" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <form className="console-form-stack" onSubmit={handleSubmit}>
+        <div className="console-form-layout">
+          {/* Left: details */}
+          <div className="console-form-stack">
+            <section className="console-panel">
+              <div className="console-panel__head">
+                <div>
+                  <h2>Product details</h2>
+                  <p>Name and description shown on the storefront.</p>
+                </div>
+              </div>
+              <div className="console-panel__body console-form-fields">
+                <div className="ui-field">
+                  <label className="ui-label" htmlFor="prod-name">
+                    <span>Product name <span className="ui-required">*</span></span>
+                  </label>
                   <input
                     id="prod-name"
+                    className="ui-input"
                     type="text"
                     name="name"
                     placeholder="e.g. Minimalist Ceramic Vase"
@@ -230,23 +265,37 @@ function AdminProductForm() {
                   />
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="prod-description">Product Description</label>
+                <div className="ui-field">
+                  <label className="ui-label" htmlFor="prod-description">Product description</label>
                   <textarea
                     id="prod-description"
-                    rows="4"
+                    className="ui-textarea"
+                    rows="5"
                     name="description"
-                    placeholder="Describe product craftsmanship, materials, and dimensions..."
+                    placeholder="Describe craftsmanship, materials and dimensions..."
                     value={form.description}
                     onChange={handleChange}
                   />
                 </div>
+              </div>
+            </section>
 
-                <div className="form-row-2col">
-                  <div className="form-group">
-                    <label htmlFor="prod-price">Retail Price ($) *</label>
+            <section className="console-panel">
+              <div className="console-panel__head">
+                <div>
+                  <h2>Pricing &amp; inventory</h2>
+                  <p>Prices are in US dollars.</p>
+                </div>
+              </div>
+              <div className="console-panel__body console-form-fields">
+                <div className="ui-form-grid">
+                  <div className="ui-field">
+                    <label className="ui-label" htmlFor="prod-price">
+                      <span>Retail price ($) <span className="ui-required">*</span></span>
+                    </label>
                     <input
                       id="prod-price"
+                      className="ui-input"
                       type="number"
                       step="0.01"
                       min="0"
@@ -258,10 +307,11 @@ function AdminProductForm() {
                     />
                   </div>
 
-                  <div className="form-group">
-                    <label htmlFor="prod-saleprice">Sale Price ($ optional)</label>
+                  <div className="ui-field">
+                    <label className="ui-label" htmlFor="prod-saleprice">Sale price ($, optional)</label>
                     <input
                       id="prod-saleprice"
+                      className="ui-input"
                       type="number"
                       step="0.01"
                       min="0"
@@ -271,19 +321,20 @@ function AdminProductForm() {
                       onChange={handleChange}
                     />
                   </div>
-                </div>
 
-                <div className="form-row-2col">
-                  <div className="form-group">
-                    <label htmlFor="prod-category">Category *</label>
+                  <div className="ui-field">
+                    <label className="ui-label" htmlFor="prod-category">
+                      <span>Category <span className="ui-required">*</span></span>
+                    </label>
                     <select
                       id="prod-category"
+                      className="ui-select"
                       name="category"
                       value={form.category}
                       onChange={handleChange}
                       required
                     >
-                      <option value="">Select Category...</option>
+                      <option value="">Select category...</option>
                       {categories.map((c) => (
                         <option key={c._id || c.id} value={c.name}>
                           {c.name}
@@ -292,133 +343,165 @@ function AdminProductForm() {
                     </select>
                   </div>
 
-                  <div className="form-group">
-                    <label htmlFor="prod-stock">Stock Quantity</label>
+                  <div className="ui-field">
+                    <label className="ui-label" htmlFor="prod-stock">Stock quantity</label>
                     <input
                       id="prod-stock"
+                      className="ui-input"
                       type="number"
                       min="0"
                       name="stock"
                       value={form.stock}
                       onChange={handleChange}
                     />
+                    <span className="ui-hint admin-stock-hint">
+                      {form.stock === "" ? null : Number(form.stock) <= 0 ? (
+                        <StatusBadge status="out" label="Out of Stock" tone="danger" />
+                      ) : Number(form.stock) <= LOW_STOCK_LEVEL ? (
+                        <StatusBadge status="low" label="Low Stock" tone="warning" />
+                      ) : (
+                        <StatusBadge status="in" label="In Stock" tone="success" />
+                      )}
+                      {LOW_STOCK_LEVEL} or fewer units are flagged as low stock. 0 units cannot be purchased.
+                    </span>
                   </div>
-                </div>
-
-                <div className="form-checkbox-row">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      name="inStock"
-                      checked={form.inStock}
-                      onChange={handleChange}
-                    />
-                    <span>Available for purchase (In Stock)</span>
-                  </label>
-
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      name="isFeatured"
-                      checked={form.isFeatured}
-                      onChange={handleChange}
-                    />
-                    <span>Feature on Homepage Slider</span>
-                  </label>
-
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      name="isNew"
-                      checked={form.isNew}
-                      onChange={handleChange}
-                    />
-                    <span>Display 'New' Badge</span>
-                  </label>
                 </div>
               </div>
+            </section>
 
-              {/* Right Column: Image Upload & Preview */}
-              <div className="form-col-media">
-                <div className="media-upload-card">
-                  <h3>Product Image *</h3>
-                  <p>Upload a clean photo from your device or paste a URL</p>
-
-                  {/* Image Preview Box */}
-                  <div className="image-preview-box">
-                    {previewUrl ? (
-                      <img
-                        src={getImageUrl(previewUrl)}
-                        alt="Product preview"
-                        onError={() => setPreviewUrl("")}
-                      />
-                    ) : (
-                      <div className="preview-placeholder">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                          <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                          <polyline points="21 15 16 10 5 21"></polyline>
-                        </svg>
-                        <span>No image selected</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* File Upload Dropzone */}
-                  <div className="upload-dropzone">
-                    <label className="upload-file-button" htmlFor="product-file-input">
-                      {uploading ? "Uploading to Server..." : "Choose File to Upload"}
-                    </label>
-                    <input
-                      id="product-file-input"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageFileChange}
-                      disabled={uploading}
-                      style={{ display: "none" }}
-                    />
-                    <small className="upload-note">PNG, JPG, WEBP up to 5MB</small>
-                  </div>
-
-                  {/* Or Manual URL Input */}
-                  <div className="manual-url-wrap">
-                    <label htmlFor="prod-image-url">Or Image URL</label>
-                    <input
-                      id="prod-image-url"
-                      type="text"
-                      name="image"
-                      placeholder="https://images.unsplash.com/... or /uploads/..."
-                      value={form.image}
-                      onChange={handleChange}
-                    />
-                  </div>
+            <section className="console-panel">
+              <div className="console-panel__head">
+                <div>
+                  <h2>Visibility</h2>
+                  <p>Control how this product appears in the store.</p>
                 </div>
+              </div>
+              <div className="console-panel__body console-switches">
+                <label className="ui-check">
+                  <input
+                    type="checkbox"
+                    name="inStock"
+                    checked={form.inStock}
+                    onChange={handleChange}
+                  />
+                  <span>Available for purchase</span>
+                </label>
+                <p className="ui-hint">
+                  Products with 0 stock are always shown as out of stock. Saving with stock above 0 makes the
+                  product available again.
+                </p>
+
+                <label className="ui-check">
+                  <input
+                    type="checkbox"
+                    name="isFeatured"
+                    checked={form.isFeatured}
+                    onChange={handleChange}
+                  />
+                  <span>Feature on the homepage</span>
+                </label>
+
+                <label className="ui-check">
+                  <input
+                    type="checkbox"
+                    name="isNew"
+                    checked={form.isNew}
+                    onChange={handleChange}
+                  />
+                  <span>Show the "New" badge</span>
+                </label>
+              </div>
+            </section>
+          </div>
+
+          {/* Right: image */}
+          <section className="console-panel">
+            <div className="console-panel__head">
+              <div>
+                <h2>Product image <span className="ui-required">*</span></h2>
+                <p>Upload a photo or paste an image URL.</p>
               </div>
             </div>
+            <div className="console-panel__body console-uploader">
+              <div className="console-uploader__preview">
+                {previewUrl ? (
+                  <img
+                    src={getImageUrl(previewUrl)}
+                    alt="Product preview"
+                    onError={() => setPreviewUrl("")}
+                  />
+                ) : (
+                  <div className="console-uploader__empty">
+                    <Icon name="image" />
+                    <span>No image selected</span>
+                  </div>
+                )}
+              </div>
 
-            {/* Submit Bar */}
-            <div className="form-submit-row">
-              <Link to="/admin/products" className="dashboard-outline-btn">
-                Cancel
-              </Link>
-              <button
-                type="submit"
-                className="dashboard-view-btn"
-                disabled={saving || uploading}
+              <label
+                className={`console-uploader__drop ${uploading ? "is-busy" : ""}`}
+                htmlFor="product-file-input"
               >
-                {saving
-                  ? "Saving Product..."
-                  : isEditing
-                  ? "Save Changes"
-                  : "Publish Product to Store"}
-              </button>
+                {uploading ? <span className="ui-spinner" aria-hidden="true"></span> : <Icon name="upload" />}
+                {uploading ? "Uploading to server..." : "Choose file to upload"}
+                <small>PNG, JPG, WEBP up to 5MB</small>
+              </label>
+              <input
+                id="product-file-input"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                onChange={handleImageFileChange}
+                disabled={uploading}
+                className="visually-hidden"
+              />
+
+              <div className="ui-field">
+                <label className="ui-label" htmlFor="prod-image-url">Or image URL</label>
+                <input
+                  id="prod-image-url"
+                  className="ui-input"
+                  type="text"
+                  name="image"
+                  placeholder="https://images.unsplash.com/... or /uploads/..."
+                  value={form.image}
+                  onChange={handleChange}
+                />
+              </div>
             </div>
-          </form>
+          </section>
         </div>
-      </div>
+
+        {/* Submit bar */}
+        <div className="console-form-actions">
+          <Link to="/admin/products" className="ui-btn ui-btn--secondary">
+            Cancel
+          </Link>
+          <button
+            type="submit"
+            className="ui-btn"
+            disabled={saving || uploading}
+          >
+            {saving ? (
+              <>
+                <span className="ui-spinner" aria-hidden="true"></span>
+                Saving product...
+              </>
+            ) : isEditing ? (
+              <>
+                <Icon name="check" />
+                Save Changes
+              </>
+            ) : (
+              <>
+                <Icon name="plus" />
+                Publish Product
+              </>
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
 
 export default AdminProductForm;
-

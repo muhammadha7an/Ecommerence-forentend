@@ -1,0 +1,75 @@
+/* ==========================================================================
+   ACCOUNT (store layout: /account, portal: /dashboard/profile)
+   Uses the shared console components; this file only handles page framing.
+   ========================================================================== */
+
+.account-page {
+  padding: var(--sp-8) var(--gutter) var(--section-y);
+  background: var(--c-surface-alt);
+}
+
+.account-page--embedded {
+  padding: 0;
+  background: transparent;
+}
+
+.account-container {
+  max-width: 1080px;
+}
+
+.account-page--embedded .account-container {
+  max-width: 1320px;
+}
+
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.account-form__legend {
+  color: var(--c-ink);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+}
+
+.account-form__legend:not(:first-child) {
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--c-line);
+}
+
+.account-form .ui-alert + .account-form__legend {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.account-form__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.account-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--sp-6);
+}
+
+.account-session__text {
+  margin-bottom: var(--sp-5);
+  color: var(--c-text-muted);
+  font-size: var(--fs-sm);
+}
+
+@media (max-width: 900px) {
+  .account-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .account-form__actions .ui-btn,
+  .account-session .ui-btn {
+    width: 100%;
+  }
+}

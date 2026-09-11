@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import authService from "../services/authService";
+import Icon from "../components/Icon";
+import StatusBadge from "../components/StatusBadge";
+import EmptyState from "../components/EmptyState";
 
 function UserDashboard() {
   const navigate = useNavigate();
@@ -57,9 +60,9 @@ function UserDashboard() {
 
   if (loading) {
     return (
-      <div className="dashboard-page">
-        <div className="dashboard-loading">
-          <div className="dashboard-spinner"></div>
+      <div className="console-page">
+        <div className="ui-loading">
+          <span className="ui-spinner ui-spinner--lg" aria-hidden="true"></span>
           <p>Loading your dashboard...</p>
         </div>
       </div>
@@ -81,280 +84,228 @@ function UserDashboard() {
     return status === "delivered" || status === "completed";
   }).length;
 
+  const firstName = user?.name ? user.name.split(" ")[0] : "Customer";
+
   return (
-    <div className="dashboard-page">
-      <div className="dashboard-container">
-        {/* DASHBOARD HERO HEADER */}
-        <div className="dashboard-header">
-          <div className="dashboard-user">
-            <div className="dashboard-avatar">{userInitial}</div>
-            <div>
-              <span className="dashboard-welcome">Welcome back</span>
-              <h1>{user?.name || "Customer"}</h1>
-              <p>{user?.email}</p>
-            </div>
-          </div>
-
-          <div className="dashboard-actions">
-            <Link className="dashboard-outline-btn" to="/account">
-              Account Settings
-            </Link>
-            <button className="dashboard-logout-btn" onClick={handleLogout}>
-              Logout
-            </button>
+    <div className="console-page">
+      {/* WELCOME */}
+      <section className="console-welcome">
+        <div className="console-welcome__user">
+          <span className="console-avatar">{userInitial}</span>
+          <div style={{ minWidth: 0 }}>
+            <p>Welcome back</p>
+            <h1>{firstName}</h1>
+            <p>{user?.email}</p>
           </div>
         </div>
 
-        {/* DYNAMIC STATISTICS CARDS */}
-        <div className="dashboard-stats-grid">
-          <div className="stat-widget">
-            <div className="stat-widget-icon icon-orders">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-              </svg>
-            </div>
-            <div className="stat-widget-content">
-              <span className="stat-label">Total Orders</span>
-              <strong className="stat-value">{orders.length}</strong>
-              <small className="stat-meta">{orders.length === 1 ? "1 order placed" : `${orders.length} orders placed`}</small>
-            </div>
-          </div>
+        <div className="console-head__actions">
+          <Link className="ui-btn ui-btn--secondary" to="/dashboard/profile">
+            <Icon name="settings" />
+            Account Settings
+          </Link>
+          <button type="button" className="ui-btn ui-btn--accent" onClick={handleLogout}>
+            <Icon name="logOut" />
+            Logout
+          </button>
+        </div>
+      </section>
 
-          <div className="stat-widget">
-            <div className="stat-widget-icon icon-pending">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
-            </div>
-            <div className="stat-widget-content">
-              <span className="stat-label">In Progress</span>
-              <strong className="stat-value">{pendingOrders}</strong>
-              <small className="stat-meta">Pending / Processing</small>
-            </div>
+      {/* STATS */}
+      <div className="console-stats">
+        <div className="console-stat">
+          <div className="console-stat__top">
+            <span>Total orders</span>
+            <span className="console-stat__icon"><Icon name="package" /></span>
           </div>
-
-          <div className="stat-widget">
-            <div className="stat-widget-icon icon-completed">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-              </svg>
-            </div>
-            <div className="stat-widget-content">
-              <span className="stat-label">Completed</span>
-              <strong className="stat-value">{completedOrders}</strong>
-              <small className="stat-meta">Delivered successfully</small>
-            </div>
-          </div>
-
-          <div className="stat-widget">
-            <div className="stat-widget-icon icon-spent">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="12" y1="1" x2="12" y2="23"></line>
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-              </svg>
-            </div>
-            <div className="stat-widget-content">
-              <span className="stat-label">Total Spent</span>
-              <strong className="stat-value">${totalSpent.toFixed(2)}</strong>
-              <small className="stat-meta">Lifetime spending</small>
-            </div>
-          </div>
-
-          <div className="stat-widget">
-            <div className="stat-widget-icon icon-wishlist">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-              </svg>
-            </div>
-            <div className="stat-widget-content">
-              <span className="stat-label">Wishlist</span>
-              <strong className="stat-value">{totalWishlistCount}</strong>
-              <small className="stat-meta"><Link to="/wishlist">View saved items</Link></small>
-            </div>
-          </div>
-
-          <div className="stat-widget">
-            <div className="stat-widget-icon icon-cart">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <path d="M16 10a4 4 0 0 1-8 0"></path>
-              </svg>
-            </div>
-            <div className="stat-widget-content">
-              <span className="stat-label">Cart</span>
-              <strong className="stat-value">{totalCartCount}</strong>
-              <small className="stat-meta"><Link to="/cart">Go to checkout</Link></small>
-            </div>
-          </div>
+          <strong className="console-stat__value">{orders.length}</strong>
+          <small className="console-stat__meta">{orders.length === 1 ? "1 order placed" : `${orders.length} orders placed`}</small>
         </div>
 
-        {/* QUICK ACTIONS */}
-        <section className="dashboard-section">
-          <div className="dashboard-section-heading">
-            <div>
-              <h2>Quick Actions</h2>
-              <p>Common account and store shortcuts</p>
-            </div>
+        <div className="console-stat">
+          <div className="console-stat__top">
+            <span>In progress</span>
+            <span className="console-stat__icon console-stat__icon--warning"><Icon name="clock" /></span>
+          </div>
+          <strong className="console-stat__value">{pendingOrders}</strong>
+          <small className="console-stat__meta">Pending or processing</small>
+        </div>
+
+        <div className="console-stat">
+          <div className="console-stat__top">
+            <span>Completed</span>
+            <span className="console-stat__icon console-stat__icon--success"><Icon name="checkCircle" /></span>
+          </div>
+          <strong className="console-stat__value">{completedOrders}</strong>
+          <small className="console-stat__meta">Delivered successfully</small>
+        </div>
+
+        <div className="console-stat console-stat--feature">
+          <div className="console-stat__top">
+            <span>Total spent</span>
+            <span className="console-stat__icon"><Icon name="dollar" /></span>
+          </div>
+          <strong className="console-stat__value">${totalSpent.toFixed(2)}</strong>
+          <small className="console-stat__meta">Lifetime spending</small>
+        </div>
+      </div>
+
+      {/* QUICK ACTIONS */}
+      <div className="console-quick">
+        <Link to="/dashboard/orders" className="console-quick__item">
+          <span className="console-quick__icon"><Icon name="fileText" /></span>
+          <span className="console-quick__text">
+            <strong>My Orders</strong>
+            <small>Track and review purchases</small>
+          </span>
+          <Icon name="chevronRight" className="console-quick__arrow" />
+        </Link>
+
+        <Link to="/cart" className="console-quick__item">
+          <span className="console-quick__icon"><Icon name="bag" /></span>
+          <span className="console-quick__text">
+            <strong>My Cart</strong>
+            <small>{totalCartCount} item(s) waiting</small>
+          </span>
+          <Icon name="chevronRight" className="console-quick__arrow" />
+        </Link>
+
+        <Link to="/wishlist" className="console-quick__item">
+          <span className="console-quick__icon"><Icon name="heart" /></span>
+          <span className="console-quick__text">
+            <strong>Wishlist</strong>
+            <small>{totalWishlistCount} saved item(s)</small>
+          </span>
+          <Icon name="chevronRight" className="console-quick__arrow" />
+        </Link>
+
+        <Link to="/dashboard/profile" className="console-quick__item">
+          <span className="console-quick__icon"><Icon name="user" /></span>
+          <span className="console-quick__text">
+            <strong>Profile &amp; Security</strong>
+            <small>Edit address and password</small>
+          </span>
+          <Icon name="chevronRight" className="console-quick__arrow" />
+        </Link>
+      </div>
+
+      {/* RECENT ORDERS */}
+      <section className="console-panel">
+        <div className="console-panel__head">
+          <div>
+            <h2>Recent orders</h2>
+            <p>Your latest purchases and their shipping status</p>
           </div>
 
-          <div className="quick-actions-grid">
-            <Link to="/dashboard/orders" className="quick-action-card">
-              <span className="quick-action-icon">📋</span>
-              <span className="quick-action-content">
-                <strong>My Orders</strong>
-                <small>Track & review purchases</small>
-              </span>
-              <span className="quick-action-arrow">→</span>
+          {orders.length > 0 && (
+            <Link className="ui-btn ui-btn--secondary ui-btn--sm" to="/dashboard/orders">
+              View All ({orders.length})
             </Link>
+          )}
+        </div>
 
-            <Link to="/cart" className="quick-action-card">
-              <span className="quick-action-icon">🛒</span>
-              <span className="quick-action-content">
-                <strong>My Cart</strong>
-                <small>{totalCartCount} item(s) waiting</small>
-              </span>
-              <span className="quick-action-arrow">→</span>
-            </Link>
-
-            <Link to="/wishlist" className="quick-action-card">
-              <span className="quick-action-icon">❤️</span>
-              <span className="quick-action-content">
-                <strong>Wishlist</strong>
-                <small>{totalWishlistCount} saved item(s)</small>
-              </span>
-              <span className="quick-action-arrow">→</span>
-            </Link>
-
-            <Link to="/account" className="quick-action-card">
-              <span className="quick-action-icon">👤</span>
-              <span className="quick-action-content">
-                <strong>Profile & Security</strong>
-                <small>Edit address & password</small>
-              </span>
-              <span className="quick-action-arrow">→</span>
-            </Link>
-          </div>
-        </section>
-
-        {/* RECENT ORDERS */}
-        <section className="dashboard-section">
-          <div className="dashboard-section-heading">
-            <div>
-              <h2>Recent Orders</h2>
-              <p>Your latest purchases and their shipping status</p>
-            </div>
-
-            {orders.length > 0 && (
-              <Link className="dashboard-view-btn" to="/dashboard/orders">
-                View All ({orders.length})
-              </Link>
-            )}
-          </div>
-
-          {orders.length === 0 ? (
-            <div className="dashboard-empty-panel">
-              <div className="dashboard-empty-icon">📦</div>
-              <h3>No orders yet</h3>
-              <p>You haven't placed any orders yet. Discover our curated collection.</p>
-              <Link className="dashboard-view-btn" to="/shop">
+        {orders.length === 0 ? (
+          <div className="console-panel__body">
+            <EmptyState
+              icon="package"
+              title="No orders yet"
+              text="You haven't placed any orders yet. Discover our curated collection."
+            >
+              <Link className="ui-btn" to="/shop">
                 Start Shopping
               </Link>
-            </div>
-          ) : (
-            <div className="dashboard-panel order-table-wrap">
-              <table className="dashboard-table">
-                <thead>
-                  <tr>
-                    <th>Order ID</th>
-                    <th>Date</th>
-                    <th>Items</th>
-                    <th>Total</th>
-                    <th>Payment</th>
-                    <th>Status</th>
-                    <th>Action</th>
+            </EmptyState>
+          </div>
+        ) : (
+          <div className="console-table-wrap">
+            <table className="console-table console-table--stack">
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Date</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                  <th>Payment</th>
+                  <th>Status</th>
+                  <th className="is-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.slice(0, 5).map((order) => (
+                  <tr key={order._id}>
+                    <td className="is-primary" data-label="Order">
+                      <span className="console-mono">#{String(order._id).slice(-8).toUpperCase()}</span>
+                    </td>
+                    <td data-label="Date">{new Date(order.createdAt).toLocaleDateString()}</td>
+                    <td data-label="Items">
+                      {order.items?.reduce((sum, item) => sum + (item.quantity || 1), 0) || 0} product(s)
+                    </td>
+                    <td data-label="Total" className="is-num">
+                      <strong>${((order.totalAmount || 0) / 100).toFixed(2)}</strong>
+                    </td>
+                    <td data-label="Payment">
+                      <StatusBadge status={order.paymentStatus || "unpaid"} />
+                    </td>
+                    <td data-label="Status">
+                      <StatusBadge status={order.orderStatus || "pending"} />
+                    </td>
+                    <td data-label="" className="is-right">
+                      <Link className="ui-btn ui-btn--secondary ui-btn--sm" to={`/dashboard/orders/${order._id}`}>
+                        View Details
+                      </Link>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {orders.slice(0, 5).map((order) => (
-                    <tr key={order._id}>
-                      <td>
-                        <strong>#{String(order._id).slice(-8)}</strong>
-                      </td>
-                      <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-                      <td>
-                        {order.items?.reduce((sum, item) => sum + (item.quantity || 1), 0) || 0} product(s)
-                      </td>
-                      <td>
-                        <strong>
-                          ${((order.totalAmount || 0) / 100).toFixed(2)}
-                        </strong>
-                      </td>
-                      <td>
-                        <span className={`payment-pill ${order.paymentStatus || "unpaid"}`}>
-                          {order.paymentStatus || "unpaid"}
-                        </span>
-                      </td>
-                      <td>
-                        <span
-                          className={`status-badge ${order.orderStatus
-                            ?.toLowerCase()
-                            ?.replace(/\s+/g, "-")}`}
-                        >
-                          {order.orderStatus || "pending"}
-                        </span>
-                      </td>
-                      <td>
-                        <Link
-                          className="table-action-link"
-                          to={`/dashboard/orders/${order._id}`}
-                        >
-                          View Details
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
-        {/* ACCOUNT INFORMATION SNAPSHOT */}
-        <section className="dashboard-section">
-          <div className="dashboard-section-heading">
-            <div>
-              <h2>Account Information</h2>
-              <p>Your saved contact and delivery address</p>
-            </div>
-
-            <Link className="dashboard-outline-btn" to="/account">
-              Edit Account
-            </Link>
+      {/* ACCOUNT INFORMATION */}
+      <section className="console-panel">
+        <div className="console-panel__head">
+          <div>
+            <h2>Account information</h2>
+            <p>Your saved contact and delivery address</p>
           </div>
 
-          <div className="dashboard-panel">
-            <div className="dashboard-account-grid">
-              <div className="account-info-box">
-                <span className="info-box-label">Full Name</span>
+          <Link className="ui-btn ui-btn--secondary ui-btn--sm" to="/dashboard/profile">
+            <Icon name="edit" />
+            Edit Account
+          </Link>
+        </div>
+
+        <div className="console-panel__body">
+          <div className="console-info-grid">
+            <div className="console-info">
+              <Icon name="user" />
+              <div>
+                <span>Full name</span>
                 <strong>{user?.name || "Not provided"}</strong>
               </div>
+            </div>
 
-              <div className="account-info-box">
-                <span className="info-box-label">Email Address</span>
+            <div className="console-info">
+              <Icon name="mail" />
+              <div>
+                <span>Email address</span>
                 <strong>{user?.email || "Not provided"}</strong>
               </div>
+            </div>
 
-              <div className="account-info-box">
-                <span className="info-box-label">Phone Number</span>
+            <div className="console-info">
+              <Icon name="phone" />
+              <div>
+                <span>Phone number</span>
                 <strong>{user?.address?.phone || "No phone number saved"}</strong>
               </div>
+            </div>
 
-              <div className="account-info-box">
-                <span className="info-box-label">Delivery Address</span>
+            <div className="console-info">
+              <Icon name="mapPin" />
+              <div>
+                <span>Delivery address</span>
                 <strong>
                   {user?.address?.street
                     ? `${user.address.street}, ${user.address.city || ""} ${user.address.postalCode || ""}`
@@ -363,8 +314,8 @@ function UserDashboard() {
               </div>
             </div>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
     </div>
   );
 }

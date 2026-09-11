@@ -168,9 +168,11 @@ const deleteCategory = async (id) => {
 };
 
 // Image Upload API
-const uploadImage = async (formData) => {
+// folder: "products" | "categories" — decides where the backend stores the file
+const uploadImage = async (formData, folder = "products") => {
   const response = await axios.post(`${API_BASE_URL}/api/upload`, formData, {
     headers: authHeaders(),
+    params: { folder },
   });
   return response.data;
 };
@@ -253,6 +255,92 @@ const updateAdminOrderStatus = async (orderId, orderStatus) => {
   return response.data;
 };
 
+// Newsletter Subscription (public)
+const subscribeNewsletter = async (email, source = "website") => {
+  const response = await axios.post(`${API_BASE_URL}/api/subscribers`, {
+    email,
+    source,
+  });
+  return response.data;
+};
+
+// Admin Newsletter Subscribers
+const getAdminSubscribers = async () => {
+  const response = await axios.get(`${API_BASE_URL}/api/admin/subscribers`, {
+    headers: authHeaders(),
+  });
+  return response.data;
+};
+
+// Public store settings (shipping rules)
+const getStoreSettings = async () => {
+  const response = await axios.get(`${API_BASE_URL}/api/settings/public`);
+  return response.data;
+};
+
+// Contact form
+const submitContact = async (payload) => {
+  const response = await axios.post(`${API_BASE_URL}/api/contact`, payload);
+  return response.data;
+};
+
+// Admin settings
+const getAdminSettings = async () => {
+  const response = await axios.get(`${API_BASE_URL}/api/admin/settings`, {
+    headers: authHeaders(),
+  });
+  return response.data;
+};
+
+const updateAdminSettings = async (payload) => {
+  const response = await axios.put(`${API_BASE_URL}/api/admin/settings`, payload, {
+    headers: authHeaders(),
+  });
+  return response.data;
+};
+
+// Admin profile (name / email / password). A password change returns a fresh token.
+const updateAdminProfile = async (payload) => {
+  const response = await axios.put(`${API_BASE_URL}/api/admin/profile`, payload, {
+    headers: authHeaders(),
+  });
+
+  if (response.data?.token) {
+    localStorage.setItem("token", response.data.token);
+  }
+  if (response.data?.user) {
+    const stored = JSON.parse(localStorage.getItem("user") || "null") || {};
+    localStorage.setItem("user", JSON.stringify({ ...stored, ...response.data.user }));
+  }
+
+  return response.data;
+};
+
+// Admin contact messages
+const getAdminContactMessages = async (params = {}) => {
+  const response = await axios.get(`${API_BASE_URL}/api/admin/contact-messages`, {
+    headers: authHeaders(),
+    params,
+  });
+  return response.data;
+};
+
+const updateContactMessageStatus = async (id, status) => {
+  const response = await axios.patch(
+    `${API_BASE_URL}/api/admin/contact-messages/${id}`,
+    { status },
+    { headers: authHeaders() }
+  );
+  return response.data;
+};
+
+const deleteContactMessage = async (id) => {
+  const response = await axios.delete(`${API_BASE_URL}/api/admin/contact-messages/${id}`, {
+    headers: authHeaders(),
+  });
+  return response.data;
+};
+
 const authService = {
   signup,
   login,
@@ -285,6 +373,16 @@ const authService = {
   getAdminOrders,
   getAdminOrder,
   updateAdminOrderStatus,
+  subscribeNewsletter,
+  getAdminSubscribers,
+  getStoreSettings,
+  submitContact,
+  getAdminSettings,
+  updateAdminSettings,
+  updateAdminProfile,
+  getAdminContactMessages,
+  updateContactMessageStatus,
+  deleteContactMessage,
 };
 
 export default authService;

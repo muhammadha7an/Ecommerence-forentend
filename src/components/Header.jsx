@@ -1,11 +1,29 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import authService from '../services/authService';
+import Icon from './Icon.jsx';
+import { useFreeShippingThreshold } from '../hooks/useShipping';
+import { freeShippingPhrase } from '../utils/commerce';
+import '../style/components/header.css';
+
+const navItems = [
+  { to: '/', label: 'Home', end: true },
+  { to: '/shop', label: 'Shop' },
+  { to: '/about', label: 'About' },
+  { to: '/contact', label: 'Contact' },
+];
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isScrolled, setIsScrolled] = useState(false);
+  const accountRef = useRef(null);
+  const searchInputRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const cartItems = useSelector((state) => state.cart?.items || []);
   const wishlistItems = useSelector((state) => state.wishlist?.items || []);
@@ -21,6 +39,54 @@ export default function Header() {
   const isAuthenticated = Boolean(token && user);
   const isAdmin = user?.role === 'admin';
   const dashboardPath = isAdmin ? '/admin/dashboard' : '/dashboard';
+  const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
+
+  // Close all overlays when the route changes
+  useEffect(() => {
+    setIsMenuOpen(false);
+    setIsAccountOpen(false);
+    setIsSearchOpen(false);
+  }, [location.pathname, location.search]);
+
+  // Subtle elevation once the page scrolls
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Lock page scroll while the mobile drawer is open
+  useEffect(() => {
+    document.body.classList.toggle('is-scroll-locked', isMenuOpen);
+    return () => document.body.classList.remove('is-scroll-locked');
+  }, [isMenuOpen]);
+
+  // Escape closes overlays; outside click closes the account menu
+  useEffect(() => {
+    const onKey = (event) => {
+      if (event.key === 'Escape') {
+        setIsMenuOpen(false);
+        setIsAccountOpen(false);
+        setIsSearchOpen(false);
+      }
+    };
+    const onPointer = (event) => {
+      if (accountRef.current && !accountRef.current.contains(event.target)) {
+        setIsAccountOpen(false);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onPointer);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('mousedown', onPointer);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isSearchOpen) searchInputRef.current?.focus();
+  }, [isSearchOpen]);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -33,190 +99,279 @@ export default function Header() {
   const handleLogout = () => {
     authService.logout();
     closeMenu();
+    setIsAccountOpen(false);
     navigate('/login');
   };
 
+  const handleSearch = (event) => {
+    event.preventDefault();
+    const term = searchTerm.trim();
+    navigate(term ? `/shop?search=${encodeURIComponent(term)}` : '/shop');
+    setSearchTerm('');
+    setIsSearchOpen(false);
+    closeMenu();
+  };
+
+  const freeShippingThreshold = useFreeShippingThreshold();
+
+  const navClass = ({ isActive }) => `site-nav__link${isActive ? ' is-active' : ''}`;
+  const drawerLinkClass = ({ isActive }) => `drawer__link${isActive ? ' is-active' : ''}`;
+
   return (
-    <header className={`site-header ${isMenuOpen ? 'menu-open' : ''}`}>
-      {/* Logo */}
-      <Link to="/" className="site-logo" onClick={closeMenu}>
-        Aura<span>.</span>
-      </Link>
+    <>
+      <div className="announcement-bar">
+        <p>
+          <Icon name="truck" />
+          Free shipping {freeShippingPhrase(freeShippingThreshold)}, with easy returns.
+        </p>
+      </div>
 
-      {/* Main nav links (Desktop + Mobile slide-out) */}
-      <nav className="main-nav" aria-label="Main navigation">
-        <Link to="/" onClick={closeMenu}>
-          Home
-        </Link>
-        <Link to="/shop" onClick={closeMenu}>
-          Shop
-        </Link>
-        <Link to="/about" onClick={closeMenu}>
-          About
-        </Link>
-        <Link to="/contact" onClick={closeMenu}>
-          Contact
-        </Link>
-
-        {/* Mobile-only section in menu */}
-        <div className="mobile-menu-extras">
-          <Link to="/cart" onClick={closeMenu} className="mobile-menu-item">
-            <span>Cart</span>
-            {totalCartCount > 0 && (
-              <span className="mobile-badge">{totalCartCount}</span>
-            )}
-          </Link>
-
-          <Link to="/wishlist" onClick={closeMenu} className="mobile-menu-item">
-            <span>Wishlist</span>
-            {totalWishlistCount > 0 && (
-              <span className="mobile-badge">{totalWishlistCount}</span>
-            )}
-          </Link>
-
-          {isAuthenticated ? (
-            <>
-              <Link to={dashboardPath} onClick={closeMenu} className="mobile-menu-item highlight">
-                {isAdmin ? 'Admin Dashboard' : 'User Dashboard'}
-              </Link>
-              <Link to="/account" onClick={closeMenu} className="mobile-menu-item">
-                My Account
-              </Link>
-              <button
-                type="button"
-                className="mobile-menu-logout"
-                onClick={handleLogout}
-              >
-                Sign Out ({user?.name || 'User'})
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" onClick={closeMenu} className="mobile-menu-item">
-                Sign In
-              </Link>
-              <Link to="/signup" onClick={closeMenu} className="mobile-menu-item highlight">
-                Create Account
-              </Link>
-            </>
-          )}
-        </div>
-      </nav>
-
-      {/* Right side actions (Desktop & Icons) */}
-      <div className="header-actions">
-        {isAuthenticated && (
-          <Link
-            to={dashboardPath}
-            aria-label="Dashboard"
-            className="icon-btn desktop-only dashboard-link-icon"
-            title={isAdmin ? 'Admin Dashboard' : 'User Dashboard'}
+      <header className={`site-header${isScrolled ? ' is-scrolled' : ''}`}>
+        <div className="site-header__inner">
+          {/* Mobile menu toggle (left on small screens) */}
+          <button
+            type="button"
+            className="header-icon-btn header-menu-toggle"
+            onClick={toggleMenu}
+            aria-label="Open menu"
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-drawer"
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect x="3" y="3" width="7" height="7"></rect>
-              <rect x="14" y="3" width="7" height="7"></rect>
-              <rect x="14" y="14" width="7" height="7"></rect>
-              <rect x="3" y="14" width="7" height="7"></rect>
-            </svg>
+            <Icon name="menu" />
+          </button>
+
+          {/* Logo */}
+          <Link to="/" className="site-logo" onClick={closeMenu} aria-label="Aura home">
+            Aura<span>.</span>
           </Link>
+
+          {/* Desktop navigation */}
+          <nav className="site-nav" aria-label="Main navigation">
+            {navItems.map((item) => (
+              <NavLink key={item.to} to={item.to} end={item.end} className={navClass}>
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          {/* Actions */}
+          <div className="header-actions">
+            <button
+              type="button"
+              className={`header-icon-btn header-search-toggle${isSearchOpen ? ' is-active' : ''}`}
+              onClick={() => setIsSearchOpen((open) => !open)}
+              aria-label={isSearchOpen ? 'Close search' : 'Search products'}
+              aria-expanded={isSearchOpen}
+            >
+              <Icon name={isSearchOpen ? 'close' : 'search'} />
+            </button>
+
+            {/* Account */}
+            <div className="header-account" ref={accountRef}>
+              {isAuthenticated ? (
+                <>
+                  <button
+                    type="button"
+                    className={`header-account__trigger${isAccountOpen ? ' is-open' : ''}`}
+                    onClick={() => setIsAccountOpen((open) => !open)}
+                    aria-haspopup="menu"
+                    aria-expanded={isAccountOpen}
+                    aria-label="Account menu"
+                  >
+                    <span className="header-account__avatar">{userInitial}</span>
+                    <span className="header-account__name">{user?.name?.split(' ')[0] || 'Account'}</span>
+                    <Icon name="chevronDown" className="header-account__chevron" />
+                  </button>
+
+                  {isAccountOpen && (
+                    <div className="account-menu" role="menu">
+                      <div className="account-menu__head">
+                        <strong>{user?.name || 'Customer'}</strong>
+                        <span>{user?.email}</span>
+                      </div>
+                      <Link to={dashboardPath} className="account-menu__item" role="menuitem">
+                        <Icon name="grid" />
+                        {isAdmin ? 'Admin Dashboard' : 'User Dashboard'}
+                      </Link>
+                      {!isAdmin && (
+                        <Link to="/dashboard/orders" className="account-menu__item" role="menuitem">
+                          <Icon name="package" />
+                          My Orders
+                        </Link>
+                      )}
+                      <Link to="/account" className="account-menu__item" role="menuitem">
+                        <Icon name="user" />
+                        My Account
+                      </Link>
+                      <Link to="/wishlist" className="account-menu__item" role="menuitem">
+                        <Icon name="heart" />
+                        Wishlist
+                      </Link>
+                      <button
+                        type="button"
+                        className="account-menu__item account-menu__item--danger"
+                        onClick={handleLogout}
+                        role="menuitem"
+                      >
+                        <Icon name="logOut" />
+                        Sign Out
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <Link to="/login" className="header-icon-btn header-login-link" aria-label="Sign in" title="Sign in">
+                  <Icon name="user" />
+                  <span className="header-login-link__text">Sign in</span>
+                </Link>
+              )}
+            </div>
+
+            <Link
+              to="/wishlist"
+              aria-label={`Wishlist, ${totalWishlistCount} items`}
+              className="header-icon-btn header-wishlist-link"
+              title="Wishlist"
+            >
+              <Icon name="heart" />
+              {totalWishlistCount > 0 && <span className="header-count">{totalWishlistCount}</span>}
+            </Link>
+
+            <Link
+              to="/cart"
+              aria-label={`Cart, ${totalCartCount} items`}
+              className="header-icon-btn header-cart-link"
+              title="Cart"
+            >
+              <Icon name="bag" />
+              {totalCartCount > 0 && (
+                <span className="header-count header-count--accent">{totalCartCount}</span>
+              )}
+            </Link>
+          </div>
+        </div>
+
+        {/* Search panel */}
+        {isSearchOpen && (
+          <div className="header-search">
+            <form className="header-search__form" onSubmit={handleSearch} role="search">
+              <Icon name="search" />
+              <input
+                ref={searchInputRef}
+                type="search"
+                placeholder="Search mugs, candles, notebooks…"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                aria-label="Search products"
+              />
+              <button type="submit" className="ui-btn ui-btn--sm">
+                Search
+              </button>
+            </form>
+          </div>
+        )}
+      </header>
+
+      {/* Mobile drawer */}
+      <div
+        className={`drawer-backdrop${isMenuOpen ? ' is-open' : ''}`}
+        onClick={closeMenu}
+        aria-hidden="true"
+      />
+      <aside
+        id="mobile-drawer"
+        className={`drawer${isMenuOpen ? ' is-open' : ''}`}
+        aria-label="Mobile navigation"
+        aria-hidden={!isMenuOpen}
+        inert={!isMenuOpen}
+      >
+        <div className="drawer__head">
+          <Link to="/" className="site-logo" onClick={closeMenu}>
+            Aura<span>.</span>
+          </Link>
+          <button type="button" className="header-icon-btn" onClick={closeMenu} aria-label="Close menu">
+            <Icon name="close" />
+          </button>
+        </div>
+
+        <form className="drawer__search" onSubmit={handleSearch} role="search">
+          <Icon name="search" />
+          <input
+            type="search"
+            placeholder="Search products"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            aria-label="Search products"
+          />
+        </form>
+
+        {isAuthenticated && (
+          <div className="drawer__user">
+            <span className="header-account__avatar">{userInitial}</span>
+            <div>
+              <strong>{user?.name || 'Customer'}</strong>
+              <span>{user?.email}</span>
+            </div>
+          </div>
         )}
 
-        <Link
-          to={isAuthenticated ? '/account' : '/login'}
-          aria-label="Account"
-          className="icon-btn desktop-only"
-          title="Account"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-        </Link>
+        <nav className="drawer__nav" aria-label="Mobile main navigation">
+          {navItems.map((item) => (
+            <NavLink key={item.to} to={item.to} end={item.end} className={drawerLinkClass} onClick={closeMenu}>
+              {item.label}
+              <Icon name="chevronRight" />
+            </NavLink>
+          ))}
+        </nav>
 
-        <Link
-          to="/wishlist"
-          aria-label="Wishlist"
-          className="icon-btn desktop-only wishlist-btn"
-          title="Wishlist"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-          </svg>
-          {totalWishlistCount > 0 && (
-            <span className="cart-count">{totalWishlistCount}</span>
-          )}
-        </Link>
+        <div className="drawer__group">
+          <span className="drawer__group-title">Your items</span>
+          <Link to="/cart" onClick={closeMenu} className="drawer__row">
+            <Icon name="bag" />
+            <span>Cart</span>
+            {totalCartCount > 0 && <span className="drawer__count">{totalCartCount}</span>}
+          </Link>
+          <Link to="/wishlist" onClick={closeMenu} className="drawer__row">
+            <Icon name="heart" />
+            <span>Wishlist</span>
+            {totalWishlistCount > 0 && <span className="drawer__count">{totalWishlistCount}</span>}
+          </Link>
+        </div>
 
-        <Link to="/cart" aria-label="Cart" className="icon-btn cart-btn" title="Cart">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <path d="M16 10a4 4 0 0 1-8 0"></path>
-          </svg>
-          {totalCartCount > 0 && (
-            <span className="cart-count">{totalCartCount}</span>
-          )}
-        </Link>
-
-        {/* Mobile Hamburger Toggle */}
-        <button
-          className="icon-btn mobile-toggle"
-          onClick={toggleMenu}
-          aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
-          aria-expanded={isMenuOpen}
-        >
-          {isMenuOpen ? (
-            /* X Close Icon */
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+        <div className="drawer__group">
+          <span className="drawer__group-title">Account</span>
+          {isAuthenticated ? (
+            <>
+              <Link to={dashboardPath} onClick={closeMenu} className="drawer__row">
+                <Icon name="grid" />
+                <span>{isAdmin ? 'Admin Dashboard' : 'User Dashboard'}</span>
+              </Link>
+              <Link to="/account" onClick={closeMenu} className="drawer__row">
+                <Icon name="user" />
+                <span>My Account</span>
+              </Link>
+            </>
           ) : (
-            /* Hamburger Menu Icon */
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
+            <Link to="/login" onClick={closeMenu} className="drawer__row">
+              <Icon name="user" />
+              <span>Sign In</span>
+            </Link>
           )}
-        </button>
-      </div>
-    </header>
+        </div>
+
+        <div className="drawer__footer">
+          {isAuthenticated ? (
+            <button type="button" className="ui-btn ui-btn--secondary ui-btn--block" onClick={handleLogout}>
+              <Icon name="logOut" />
+              Sign Out ({user?.name || 'User'})
+            </button>
+          ) : (
+            <Link to="/signup" onClick={closeMenu} className="ui-btn ui-btn--block">
+              Create Account
+            </Link>
+          )}
+        </div>
+      </aside>
+    </>
   );
 }

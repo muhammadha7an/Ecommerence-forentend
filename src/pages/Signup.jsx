@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import authService from "../services/authService";
- 
+import AuthShell from "../components/AuthShell";
+import PasswordInput from "../components/PasswordInput";
+import Icon from "../components/Icon";
 
 function Signup() {
   const navigate = useNavigate();
@@ -54,89 +56,91 @@ function Signup() {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        {/* Header */}
-        <div className="auth-header">
-          <h1>Create Account</h1>
-          <p>Get started by filling out the information below.</p>
+    <AuthShell
+      title="Create your account"
+      subtitle="It takes less than a minute. Your cart and wishlist come with you."
+      icon="user"
+      footer={
+        <p>
+          Already have an account?{" "}
+          <Link to="/login" className="ui-link">
+            Sign in
+          </Link>
+        </p>
+      }
+    >
+      {message && (
+        <div className="ui-alert ui-alert--success" role="status">
+          <Icon name="checkCircle" />
+          <span>{message}</span>
+        </div>
+      )}
+
+      {error && (
+        <div className="ui-alert ui-alert--error" role="alert">
+          <Icon name="alertCircle" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="auth-form">
+        <div className="ui-field">
+          <label className="ui-label" htmlFor="name">Full name</label>
+          <input
+            id="name"
+            className="ui-input"
+            type="text"
+            name="name"
+            autoComplete="name"
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="Enter your full name"
+            required
+          />
         </div>
 
-        {/* Alert Banners */}
-        {message && (
-          <div className="alert-message success-message">
-            {message}
-          </div>
-        )}
-
-        {error && (
-          <div className="alert-message error-message">
-            {error}
-          </div>
-        )}
-
-        {/* Signup Form */}
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="name">Full Name</label>
-            <input
-              id="name"
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Enter your full name"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="email">Email Address</label>
-            <input
-              id="email"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="name@example.com"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              minLength="6"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={loading}
-          >
-            {loading ? "Creating..." : "Sign Up"}
-          </button>
-        </form>
-
-        {/* Footer */}
-        <div className="auth-footer">
-          <p>
-            Already have an account?{" "}
-            <Link to="/login" className="auth-link highlight">
-              Login
-            </Link>
-          </p>
+        <div className="ui-field">
+          <label className="ui-label" htmlFor="email">Email address</label>
+          <input
+            id="email"
+            className="ui-input"
+            type="email"
+            name="email"
+            autoComplete="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="name@example.com"
+            required
+          />
         </div>
-      </div>
-    </div>
+
+        <div className="ui-field">
+          <label className="ui-label" htmlFor="password">Password</label>
+          <PasswordInput
+            id="password"
+            name="password"
+            autoComplete="new-password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="At least 6 characters"
+            minLength="6"
+            required
+          />
+          <span className="ui-hint">Use 6 or more characters.</span>
+        </div>
+
+        <button type="submit" className="ui-btn ui-btn--lg ui-btn--block" disabled={loading}>
+          {loading ? (
+            <>
+              <span className="ui-spinner" aria-hidden="true" />
+              Creating account...
+            </>
+          ) : (
+            "Create Account"
+          )}
+        </button>
+      </form>
+    </AuthShell>
   );
 }
 

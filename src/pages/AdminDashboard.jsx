@@ -2,7 +2,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import authService from "../services/authService";
-// import styles from "../style/AdminDashboard.module.css";
+import Icon from "../components/Icon";
+import StatusBadge from "../components/StatusBadge";
+import EmptyState from "../components/EmptyState";
 
 
 const money = (amount) =>
@@ -38,6 +40,7 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [updatingId, setUpdatingId] = useState(null);
+  const [actionError, setActionError] = useState("");
 
   // NEW: selected graph range
   const [dateRange, setDateRange] = useState(7);
@@ -121,6 +124,7 @@ function AdminDashboard() {
     newStatus
   ) => {
     setUpdatingId(orderId);
+    setActionError("");
 
     try {
       await authService.updateAdminOrderStatus(
@@ -166,7 +170,7 @@ function AdminDashboard() {
         earningsRes?.earnings || []
       );
     } catch (err) {
-      alert(
+      setActionError(
         err.response?.data?.message ||
           "Unable to update order status"
       );
@@ -283,952 +287,469 @@ function AdminDashboard() {
     ) || 1;
 
   /*
+   * CHART GEOMETRY (responsive SVG, real data only)
+   */
+  const chart = (() => {
+    const width = 720;
+    const height = 260;
+    const left = 48;
+    const right = 8;
+    const top = 16;
+    const bottom = 30;
+    const plotH = height - top - bottom;
+    const count = Math.max(timeline.length, 1);
+    const slot = (width - left - right) / count;
+    const barW = Math.min(44, slot * 0.62);
+    const labelEvery = count > 14 ? 3 : count > 7 ? 2 : 1;
+
+    const bars = timeline.map((item, idx) => {
+      const revenue = Number(item.revenue || 0);
+      const barH = revenue === 0 ? 3 : Math.max((revenue / maxRevenue) * plotH, 6);
+      const x = left + idx * slot + (slot - barW) / 2;
+      const y = top + plotH - barH;
+      return { ...item, revenue, x, y, barH, cx: x + barW / 2 };
+    });
+
+    const ticks = [1, 0.66, 0.33, 0].map((ratio) => ({
+      value: Math.round(maxRevenue * ratio),
+      y: top + plotH - plotH * ratio,
+    }));
+
+    return { width, height, left, right, top, plotH, barW, bars, ticks, labelEvery, showValues: count <= 7 };
+  })();
+
+  const hovered = hoveredPoint !== null ? chart.bars[hoveredPoint] : null;
+
+  /*
    * LOADING
    */
   if (loading) {
     return (
-      <div className={`${styles.dashboardRoot} dashboard-page`}>
-        <div className="dashboard-loading">
-          <div className="dashboard-spinner"></div>
-
-          <p>
-            Loading real-time admin metrics...
-          </p>
+      <div className="console-page">
+        <div className="ui-loading">
+          <span className="ui-spinner ui-spinner--lg" aria-hidden="true"></span>
+          <p>Loading real-time admin metrics...</p>
         </div>
       </div>
     );
   }
 
+  const kpis = [
+    {
+      label: "Total revenue",
+      value: money(stats?.totalEarnings),
+      meta: "From verified checkouts",
+      icon: "dollar",
+      feature: true,
+    },
+    {
+      label: "Total orders",
+      value: stats?.totalOrders ?? 0,
+      meta: `${stats?.pendingOrders ?? 0} pending fulfillment`,
+      icon: "package",
+      tone: "info",
+      to: "/admin/orders",
+    },
+    {
+      label: "Completed orders",
+      value: stats?.completedOrders ?? 0,
+      meta: "Delivered to customers",
+      icon: "checkCircle",
+      tone: "success",
+    },
+    {
+      label: "Total users",
+      value: stats?.totalUsers ?? 0,
+      meta: "Registered accounts",
+      icon: "users",
+      to: "/admin/users",
+    },
+    {
+      label: "Total products",
+      value: stats?.totalProducts ?? 0,
+      meta: "Live in the catalog",
+      icon: "tag",
+      tone: "clay",
+      to: "/admin/products",
+    },
+    {
+      label: "Categories",
+      value: stats?.totalCategories ?? 0,
+      meta: "Storefront groupings",
+      icon: "folder",
+      to: "/admin/categories",
+    },
+    {
+      label: "Low stock",
+      value: stats?.lowStockCount ?? 0,
+      meta: "Products with 5 or fewer units",
+      icon: "alertTriangle",
+      tone: "warning",
+      to: "/admin/products",
+    },
+    {
+      label: "Subscribers",
+      value: stats?.totalSubscribers ?? 0,
+      meta: "Newsletter sign-ups",
+      icon: "mail",
+      tone: "clay",
+      to: "/admin/subscribers",
+    },
+    {
+      label: "Unread messages",
+      value: stats?.unreadContactMessages ?? 0,
+      meta: "From the contact form",
+      icon: "inbox",
+      tone: "info",
+      to: "/admin/contact-messages",
+    },
+    {
+      label: "Out of stock",
+      value: stats?.outOfStockCount ?? 0,
+      meta: "Cannot be purchased",
+      icon: "package",
+      tone: "warning",
+      to: "/admin/products",
+    },
+  ];
+
   return (
-    <div className={`${styles.dashboardRoot} dashboard-page`}>
-      <div className="dashboard-container">
-
-        {/* =========================
-            HEADER
-        ========================== */}
-
-        <div className="dashboard-header">
-          <div>
-            <span className="dashboard-welcome">
-              Store Control Center
-            </span>
-
-            <h1>
-              Administrator Dashboard
-            </h1>
-
-            <p>
-              Live metrics, revenue tracking,
-              and order fulfillment
-            </p>
-          </div>
-
-          <div className="dashboard-actions">
-            <Link
-              className="dashboard-view-btn"
-              to="/admin/products/add"
-            >
-              + Add Product
-            </Link>
-
-            <button
-              className="dashboard-outline-btn"
-              onClick={loadData}
-              title="Refresh data"
-            >
-              Refresh
-            </button>
-          </div>
+    <div className="console-page">
+      {/* HEADER */}
+      <div className="console-head">
+        <div>
+          <span className="console-head__eyebrow">Store control center</span>
+          <h1>Administrator dashboard</h1>
+          <p>Live metrics, revenue tracking and order fulfillment.</p>
         </div>
 
-        {/* ERROR */}
-
-        {error && (
-          <div className="dashboard-panel dashboard-error">
-            {error}
-          </div>
-        )}
-
-        {/* =========================
-            LOW STOCK NOTIFICATION
-        ========================== */}
-
-        {stats?.lowStockCount > 0 && (
-          <div className="admin-alert-banner warning">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-
-              <line
-                x1="12"
-                y1="9"
-                x2="12"
-                y2="13"
-              ></line>
-
-              <line
-                x1="12"
-                y1="17"
-                x2="12.01"
-                y2="17"
-              ></line>
-            </svg>
-
-            <div>
-              <strong>
-                Inventory Notice:
-              </strong>{" "}
-              {stats.lowStockCount} product(s)
-              have 5 or fewer items remaining
-              in stock.
-            </div>
-
-            <Link
-              to="/admin/products"
-              className="alert-action-link"
-            >
-              Review Stock
-            </Link>
-          </div>
-        )}
-
-        {/* =========================
-            KPI CARDS
-        ========================== */}
-
-        <div className="admin-stats-grid">
-
-          <div className="admin-stat-card primary">
-            <div className="admin-stat-header">
-              <span>
-                Total Revenue
-              </span>
-
-              <span className="stat-icon">
-                💰
-              </span>
-            </div>
-
-            <strong>
-              {money(
-                stats?.totalEarnings
-              )}
-            </strong>
-
-            <small>
-              From verified checkouts
-            </small>
-          </div>
-
-          <div className="admin-stat-card">
-            <div className="admin-stat-header">
-              <span>
-                Total Orders
-              </span>
-
-              <span className="stat-icon">
-                📦
-              </span>
-            </div>
-
-            <strong>
-              {stats?.totalOrders ?? 0}
-            </strong>
-
-            <small>
-              {stats?.pendingOrders ?? 0}{" "}
-              pending fulfillment
-            </small>
-          </div>
-
-    
-
-          <div className="admin-stat-card">
-            <div className="admin-stat-header">
-              <span>
-                Total Products
-              </span>
-
-              <span className="stat-icon">
-                🏷️
-              </span>
-            </div>
-
-            <strong>
-              {stats?.totalProducts ?? 0}
-            </strong>
-
-            <small>
-              <Link to="/admin/products">
-                Manage catalog
-              </Link>
-            </small>
-          </div>
-
-       
-
-          <div className="admin-stat-card">
-            <div className="admin-stat-header">
-              <span>
-                Total Users
-              </span>
-
-              <span className="stat-icon">
-                👥
-              </span>
-            </div>
-
-            <strong>
-              {stats?.totalUsers ?? 0}
-            </strong>
-
-            <small>
-              <Link to="/admin/users">
-                View customers
-              </Link>
-            </small>
-          </div>
+        <div className="console-head__actions">
+          <button
+            type="button"
+            className="ui-btn ui-btn--secondary"
+            onClick={loadData}
+            title="Refresh data"
+          >
+            <Icon name="refresh" />
+            Refresh
+          </button>
+          <Link className="ui-btn" to="/admin/products/add">
+            <Icon name="plus" />
+            Add Product
+          </Link>
         </div>
+      </div>
 
-        {/* =================================================
-            DAILY EARNINGS / REVENUE OVER TIME
-        ================================================== */}
+      {error && (
+        <div className="ui-alert ui-alert--error" role="alert">
+          <Icon name="alertCircle" />
+          <span>{error}</span>
+        </div>
+      )}
 
-        <div className="admin-charts-grid">
+      {actionError && (
+        <div className="ui-alert ui-alert--error" role="alert">
+          <Icon name="alertCircle" />
+          <span>{actionError}</span>
+        </div>
+      )}
 
-          <div className="dashboard-panel chart-panel">
+      {/* LOW STOCK NOTICE */}
+      {stats?.lowStockCount > 0 && (
+        <div className="console-banner" role="status">
+          <Icon name="alertTriangle" />
+          <div className="console-banner__text">
+            <strong>Inventory notice:</strong> {stats.lowStockCount} product(s) have 5 or fewer items remaining in stock.
+          </div>
+          <Link to="/admin/products" className="ui-btn ui-btn--secondary ui-btn--sm">
+            Review Stock
+          </Link>
+        </div>
+      )}
 
-            <div className="chart-header">
-              <div>
-                <h2>
-                  Revenue Over Time
-                </h2>
-
-                <p>
-                  Daily earnings aggregated
-                  from paid order transactions
-                </p>
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                }}
-              >
-                <select
-                  value={dateRange}
-                  onChange={(e) => {
-                    setHoveredPoint(null);
-
-                    setDateRange(
-                      Number(
-                        e.target.value
-                      )
-                    );
-                  }}
-                  className="status-selector"
-                >
-                  {RANGE_OPTIONS.map(
-                    (option) => (
-                      <option
-                        key={
-                          option.value
-                        }
-                        value={
-                          option.value
-                        }
-                      >
-                        {option.label}
-                      </option>
-                    )
-                  )}
-                </select>
-
-                <span className="chart-badge">
-                  Live MongoDB Data
+      {/* KPI CARDS */}
+      <div className="console-stats console-stats--kpis">
+        {kpis.map((kpi) => {
+          const Wrapper = kpi.to ? Link : "div";
+          const wrapperProps = kpi.to ? { to: kpi.to } : {};
+          return (
+            <Wrapper
+              key={kpi.label}
+              className={`console-stat ${kpi.feature ? "console-stat--feature" : ""}`}
+              {...wrapperProps}
+            >
+              <div className="console-stat__top">
+                <span>{kpi.label}</span>
+                <span className={`console-stat__icon ${kpi.tone ? `console-stat__icon--${kpi.tone}` : ""}`}>
+                  <Icon name={kpi.icon} />
                 </span>
               </div>
+              <strong className="console-stat__value">{kpi.value}</strong>
+              <small className="console-stat__meta">{kpi.meta}</small>
+            </Wrapper>
+          );
+        })}
+      </div>
+
+      {/* CHARTS */}
+      <div className="console-charts">
+        {/* Revenue over time */}
+        <section className="console-panel">
+          <div className="console-panel__head">
+            <div>
+              <h2>Revenue over time</h2>
+              <p>Daily earnings aggregated from paid orders</p>
             </div>
 
-            {/* Selected period summary */}
+            <select
+              value={dateRange}
+              onChange={(e) => {
+                setHoveredPoint(null);
+                setDateRange(Number(e.target.value));
+              }}
+              className="ui-select ui-select--sm"
+              style={{ width: "auto" }}
+              aria-label="Revenue period"
+            >
+              {RANGE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
+          <div className="console-panel__body">
             {timeline.length > 0 && (
-              <div
-                style={{
-                  display: "flex",
-                  gap: "30px",
-                  marginBottom: "18px",
-                  flexWrap: "wrap",
-                }}
-              >
+              <div className="console-chart-summary">
                 <div>
-                  <small>
-                    Selected Period
-                  </small>
-
-                  <strong
-                    style={{
-                      display: "block",
-                      fontSize: "22px",
-                    }}
-                  >
-                    $
-                    {totalDailyRevenue.toFixed(
-                      2
-                    )}
-                  </strong>
+                  <span>Selected period</span>
+                  <strong>${totalDailyRevenue.toFixed(2)}</strong>
                 </div>
-
                 <div>
-                  <small>
-                    Orders
-                  </small>
-
-                  <strong
-                    style={{
-                      display: "block",
-                      fontSize: "22px",
-                    }}
-                  >
-                    {totalDailyOrders}
-                  </strong>
+                  <span>Paid orders</span>
+                  <strong>{totalDailyOrders}</strong>
+                </div>
+                <div>
+                  <span>Daily average</span>
+                  <strong>${(totalDailyRevenue / Math.max(timeline.length, 1)).toFixed(2)}</strong>
                 </div>
               </div>
             )}
 
             {timeline.length === 0 ? (
-              <div className="chart-empty">
-                <p>
-                  No paid transactions
-                  recorded for the selected
-                  period.
-                </p>
-              </div>
+              <EmptyState
+                icon="trendingUp"
+                title="No revenue yet"
+                text="No paid transactions recorded for the selected period."
+              />
             ) : (
-              <div className="chart-wrapper">
+              <div className="console-bar-chart" onMouseLeave={() => setHoveredPoint(null)}>
+                <svg
+                  viewBox={`0 0 ${chart.width} ${chart.height}`}
+                  role="img"
+                  aria-label={`Daily revenue for the last ${dateRange} days`}
+                >
+                  {chart.ticks.map((tick) => (
+                    <g key={tick.y}>
+                      <line
+                        x1={chart.left}
+                        x2={chart.width - chart.right}
+                        y1={tick.y}
+                        y2={tick.y}
+                        stroke={tick.value === 0 ? "#cfd4cb" : "#eef1ea"}
+                        strokeWidth="1"
+                      />
+                      <text x={chart.left - 8} y={tick.y + 4} textAnchor="end" fontSize="11" fill="#87918d">
+                        ${tick.value}
+                      </text>
+                    </g>
+                  ))}
 
-                <div className="svg-chart-container">
+                  {chart.bars.map((bar, idx) => (
+                    <g
+                      key={`${bar.date}-${idx}`}
+                      onMouseEnter={() => setHoveredPoint(idx)}
+                      onFocus={() => setHoveredPoint(idx)}
+                      onBlur={() => setHoveredPoint(null)}
+                      tabIndex={0}
+                      aria-label={`${bar.fullDate}: $${bar.revenue.toFixed(2)}, ${bar.orderCount} orders`}
+                    >
+                      <rect
+                        x={bar.x - 4}
+                        y={chart.top}
+                        width={chart.barW + 8}
+                        height={chart.plotH}
+                        fill="transparent"
+                      />
+                      <rect
+                        x={bar.x}
+                        y={bar.y}
+                        width={chart.barW}
+                        height={bar.barH}
+                        rx="4"
+                        className={`console-bar-chart__bar ${bar.revenue > 0 ? "has-value" : ""} ${hoveredPoint === idx ? "is-hover" : ""}`}
+                      />
+                      {chart.showValues && bar.revenue > 0 && (
+                        <text x={bar.cx} y={bar.y - 7} textAnchor="middle" fontSize="11" fontWeight="600" fill="#1f2a27">
+                          ${bar.revenue.toFixed(0)}
+                        </text>
+                      )}
+                      {idx % chart.labelEvery === 0 && (
+                        <text x={bar.cx} y={chart.height - 8} textAnchor="middle" fontSize="11" fill="#87918d">
+                          {bar.period}
+                        </text>
+                      )}
+                    </g>
+                  ))}
+                </svg>
 
-                  <svg
-                    className="timeline-svg"
-                    viewBox={`0 0 ${
-                      timeline.length * 90 +
-                      40
-                    } 250`}
-                    preserveAspectRatio="none"
+                {hovered && (
+                  <div
+                    className="console-bar-chart__tooltip"
+                    style={{
+                      left: `${(hovered.cx / chart.width) * 100}%`,
+                      top: `${(hovered.y / chart.height) * 100}%`,
+                    }}
                   >
-
-                    {/* Grid lines */}
-
-                    <line
-                      x1="20"
-                      y1="20"
-                      x2={
-                        timeline.length *
-                          90 +
-                        20
-                      }
-                      y2="20"
-                      stroke="#f1f5f9"
-                      strokeWidth="1"
-                    />
-
-                    <line
-                      x1="20"
-                      y1="90"
-                      x2={
-                        timeline.length *
-                          90 +
-                        20
-                      }
-                      y2="90"
-                      stroke="#f1f5f9"
-                      strokeWidth="1"
-                    />
-
-                    <line
-                      x1="20"
-                      y1="160"
-                      x2={
-                        timeline.length *
-                          90 +
-                        20
-                      }
-                      y2="160"
-                      stroke="#f1f5f9"
-                      strokeWidth="1"
-                    />
-
-                    <line
-                      x1="20"
-                      y1="190"
-                      x2={
-                        timeline.length *
-                          90 +
-                        20
-                      }
-                      y2="190"
-                      stroke="#cbd5e1"
-                      strokeWidth="1.5"
-                    />
-
-                    {/* Y Axis */}
-
-                    <text
-                      x="5"
-                      y="24"
-                      fontSize="10"
-                      fill="#64748b"
-                    >
-                      $
-                      {Math.round(
-                        maxRevenue
-                      )}
-                    </text>
-
-                    <text
-                      x="5"
-                      y="94"
-                      fontSize="10"
-                      fill="#64748b"
-                    >
-                      $
-                      {Math.round(
-                        maxRevenue *
-                          0.66
-                      )}
-                    </text>
-
-                    <text
-                      x="5"
-                      y="164"
-                      fontSize="10"
-                      fill="#64748b"
-                    >
-                      $
-                      {Math.round(
-                        maxRevenue *
-                          0.33
-                      )}
-                    </text>
-
-                    {/* Bars */}
-
-                    {timeline.map(
-                      (
-                        item,
-                        idx
-                      ) => {
-                        const revenue =
-                          Number(
-                            item.revenue ||
-                              0
-                          );
-
-                        const barHeight =
-                          revenue ===
-                          0
-                            ? 4
-                            : Math.max(
-                                (
-                                  revenue /
-                                  maxRevenue
-                                ) *
-                                  150,
-                                6
-                              );
-
-                        const x =
-                          40 +
-                          idx *
-                            90;
-
-                        const y =
-                          190 -
-                          barHeight;
-
-                        return (
-                          <g
-                            key={`${item.date}-${idx}`}
-                            className="chart-bar-group"
-                            onMouseEnter={() =>
-                              setHoveredPoint(
-                                idx
-                              )
-                            }
-                            onMouseLeave={() =>
-                              setHoveredPoint(
-                                null
-                              )
-                            }
-                          >
-                            {/* Bar */}
-
-                            <rect
-                              x={x}
-                              y={y}
-                              width="42"
-                              height={
-                                barHeight
-                              }
-                              rx="4"
-                              fill="#933e25"
-                              className="chart-bar"
-                              style={{
-                                cursor:
-                                  "pointer",
-                              }}
-                            />
-
-                            {/* Revenue */}
-
-                            <text
-                              x={
-                                x +
-                                21
-                              }
-                              y={
-                                y -
-                                8
-                              }
-                              textAnchor="middle"
-                              fontSize="11"
-                              fontWeight="600"
-                              fill="#1e293b"
-                            >
-                              $
-                              {revenue.toFixed(
-                                2
-                              )}
-                            </text>
-
-                            {/* Date */}
-
-                            <text
-                              x={
-                                x +
-                                21
-                              }
-                              y="208"
-                              textAnchor="middle"
-                              fontSize="11"
-                              fill="#64748b"
-                            >
-                              {
-                                item.period
-                              }
-                            </text>
-
-                            {/* Hover tooltip */}
-
-                            {hoveredPoint ===
-                              idx && (
-                              <g>
-                                <rect
-                                  x={
-                                    x -
-                                    30
-                                  }
-                                  y={
-                                    Math.max(
-                                      y -
-                                        58,
-                                      5
-                                    )
-                                  }
-                                  width="102"
-                                  height="45"
-                                  rx="5"
-                                  fill="#1e293b"
-                                />
-
-                                <text
-                                  x={
-                                    x +
-                                    21
-                                  }
-                                  y={
-                                    Math.max(
-                                      y -
-                                        38,
-                                      25
-                                    )
-                                  }
-                                  textAnchor="middle"
-                                  fontSize="10"
-                                  fontWeight="600"
-                                  fill="#ffffff"
-                                >
-                                  $
-                                  {revenue.toFixed(
-                                    2
-                                  )}
-                                </text>
-
-                                <text
-                                  x={
-                                    x +
-                                    21
-                                  }
-                                  y={
-                                    Math.max(
-                                      y -
-                                        23,
-                                      40
-                                    )
-                                  }
-                                  textAnchor="middle"
-                                  fontSize="9"
-                                  fill="#ffffff"
-                                >
-                                  {
-                                    item.orderCount
-                                  }{" "}
-                                  order
-                                  {item.orderCount ===
-                                  1
-                                    ? ""
-                                    : "s"}
-                                </text>
-                              </g>
-                            )}
-                          </g>
-                        );
-                      }
-                    )}
-                  </svg>
-                </div>
+                    <strong>${hovered.revenue.toFixed(2)}</strong>
+                    {hovered.orderCount} order{hovered.orderCount === 1 ? "" : "s"} on {hovered.period}
+                  </div>
+                )}
               </div>
             )}
           </div>
+        </section>
 
-          {/* =================================================
-              ORDER STATUS DISTRIBUTION
-          ================================================== */}
-
-          <div className="dashboard-panel chart-panel">
-
-            <div className="chart-header">
-              <div>
-                <h2>
-                  Order Fulfillment Status
-                </h2>
-
-                <p>
-                  Status breakdown of all
-                  orders
-                </p>
-              </div>
+        {/* Fulfillment status */}
+        <section className="console-panel">
+          <div className="console-panel__head">
+            <div>
+              <h2>Order fulfillment</h2>
+              <p>Status breakdown of all orders</p>
             </div>
+          </div>
 
-            <div className="status-bars-list">
-
-              {statusBreakdown.length ===
-              0 ? (
-                <p className="chart-empty-text">
-                  No orders placed yet.
-                </p>
+          <div className="console-panel__body">
+            <div className="console-meter-list">
+              {statusBreakdown.length === 0 ? (
+                <p className="console-muted">No orders placed yet.</p>
               ) : (
-                statusBreakdown.map(
-                  (item) => {
-                    const pct =
-                      Math.round(
-                        (Number(
-                          item.count ||
-                            0
-                        ) /
-                          totalStatusCount) *
-                          100
-                      );
+                statusBreakdown.map((item) => {
+                  const pct = Math.round((Number(item.count || 0) / totalStatusCount) * 100);
+                  const statusKey = (item.status || "pending").toLowerCase();
 
-                    const statusKey =
-                      (
-                        item.status ||
-                        "pending"
-                      ).toLowerCase();
-
-                    return (
-                      <div
-                        className="status-bar-item"
-                        key={
-                          statusKey
-                        }
-                      >
-
-                        <div className="status-bar-label-row">
-
-                          <span
-                            className={`status-badge ${statusKey}`}
-                          >
-                            {item.status ||
-                              "pending"}
-                          </span>
-
-                          <span className="status-count">
-                            <strong>
-                              {
-                                item.count
-                              }{" "}
-                              orders
-                            </strong>{" "}
-                            ({pct}%)
-                          </span>
-                        </div>
-
-                        <div className="status-progress-track">
-
-                          <div
-                            className={`status-progress-fill ${statusKey}`}
-                            style={{
-                              width: `${pct}%`,
-                            }}
-                          />
-
-                        </div>
+                  return (
+                    <div className="console-meter" key={statusKey}>
+                      <div className="console-meter__row">
+                        <StatusBadge status={item.status || "pending"} />
+                        <span>
+                          <strong>{item.count}</strong> orders ({pct}%)
+                        </span>
                       </div>
-                    );
-                  }
-                )
+                      <div className="console-meter__track">
+                        <div
+                          className={`console-meter__fill console-meter__fill--${statusKey}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })
               )}
             </div>
 
-            {/* Quick Catalog categories summary */}
-
-            <div className="category-distribution-summary">
-
-              <h3 className="subheading">
-                Products by Category
-              </h3>
-
-              <div className="category-tags-wrap">
-
-                {(
-                  analytics?.productsByCategory ||
-                  []
-                ).map((cat) => (
-                  <span
-                    className="cat-metric-tag"
-                    key={
-                      cat.category
-                    }
-                  >
-                    {cat.category}:{" "}
-                    <strong>
-                      {cat.count}
-                    </strong>
+            <h3 className="console-subhead">Products by category</h3>
+            <div className="console-chips">
+              {(analytics?.productsByCategory || []).length === 0 ? (
+                <span className="console-muted">No products yet.</span>
+              ) : (
+                (analytics?.productsByCategory || []).map((cat) => (
+                  <span className="console-chip" key={cat.category}>
+                    {cat.category} <strong>{cat.count}</strong>
                   </span>
-                ))}
-
-              </div>
+                ))
+              )}
             </div>
           </div>
+        </section>
+      </div>
+
+      {/* RECENT ORDERS */}
+      <section className="console-panel">
+        <div className="console-panel__head">
+          <div>
+            <h2>Recent customer orders</h2>
+            <p>Inspect or advance order shipping statuses</p>
+          </div>
+
+          <Link className="ui-btn ui-btn--secondary ui-btn--sm" to="/admin/orders">
+            View All Orders
+          </Link>
         </div>
 
-        {/* =========================
-            RECENT ORDERS TABLE
-        ========================== */}
-
-        <section className="dashboard-section">
-
-          <div className="dashboard-section-heading">
-
-            <div>
-              <h2>
-                Recent Customer Orders
-              </h2>
-
-              <p>
-                Quickly inspect or advance
-                order shipping statuses
-              </p>
-            </div>
-
-            <Link
-              className="dashboard-view-btn"
-              to="/admin/orders"
-            >
-              View All Orders
-            </Link>
+        {recentOrders.length === 0 ? (
+          <div className="console-panel__body">
+            <EmptyState icon="package" title="No orders yet" text="No customer orders in the database yet." />
           </div>
-
-          {recentOrders.length === 0 ? (
-            <div className="dashboard-panel">
-              <p>
-                No customer orders in
-                database yet.
-              </p>
-            </div>
-          ) : (
-            <div className="dashboard-panel order-table-wrap">
-
-              <table className="dashboard-table">
-
-                <thead>
-                  <tr>
-                    <th>
-                      Order Reference
-                    </th>
-
-                    <th>
-                      Customer
-                    </th>
-
-                    <th>
-                      Date
-                    </th>
-
-                    <th>
-                      Items
-                    </th>
-
-                    <th>
-                      Total
-                    </th>
-
-                    <th>
-                      Payment
-                    </th>
-
-                    <th>
-                      Status Action
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-
-                  {recentOrders.map(
-                    (order) => (
-                      <tr
-                        key={
-                          order._id
-                        }
+        ) : (
+          <div className="console-table-wrap">
+            <table className="console-table console-table--stack">
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Customer</th>
+                  <th>Date</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                  <th>Payment</th>
+                  <th className="is-right">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentOrders.map((order) => (
+                  <tr key={order._id}>
+                    <td className="is-primary" data-label="Order">
+                      <span className="console-mono">#{String(order._id).slice(-8).toUpperCase()}</span>
+                    </td>
+                    <td data-label="Customer">
+                      <div className="console-cell__stack">
+                        <strong>{order.userId?.name || order.shippingDetails?.fullName || "Customer"}</strong>
+                        <span className="console-muted">{order.userId?.email || order.shippingDetails?.email}</span>
+                      </div>
+                    </td>
+                    <td data-label="Date">{new Date(order.createdAt).toLocaleDateString()}</td>
+                    <td data-label="Items">{order.items?.length || 0} product(s)</td>
+                    <td data-label="Total" className="is-num">
+                      <strong>{money(order.totalAmount)}</strong>
+                    </td>
+                    <td data-label="Payment">
+                      <StatusBadge status={order.paymentStatus || "unpaid"} />
+                    </td>
+                    <td data-label="Status" className="is-right">
+                      <select
+                        className="ui-select ui-select--sm console-status-select"
+                        value={order.orderStatus || "pending"}
+                        disabled={updatingId === order._id}
+                        onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                        aria-label={`Change status for order ${String(order._id).slice(-8)}`}
                       >
-
-                        <td>
-                          <strong>
-                            #
-                            {String(
-                              order._id
-                            ).slice(
-                              -8
-                            )}
-                          </strong>
-                        </td>
-
-                        <td>
-                          <strong>
-                            {order
-                              .userId
-                              ?.name ||
-                              order
-                                .shippingDetails
-                                ?.fullName ||
-                              "Customer"}
-                          </strong>
-
-                          <br />
-
-                          <small className="text-muted">
-                            {order
-                              .userId
-                              ?.email ||
-                              order
-                                .shippingDetails
-                                ?.email}
-                          </small>
-                        </td>
-
-                        <td>
-                          {new Date(
-                            order.createdAt
-                          ).toLocaleDateString()}
-                        </td>
-
-                        <td>
-                          {order.items
-                            ?.length ||
-                            0}{" "}
-                          product(s)
-                        </td>
-
-                        <td>
-                          <strong>
-                            {money(
-                              order.totalAmount
-                            )}
-                          </strong>
-                        </td>
-
-                        <td>
-                          <span
-                            className={`payment-pill ${
-                              order.paymentStatus ||
-                              "unpaid"
-                            }`}
-                          >
-                            {order.paymentStatus ||
-                              "unpaid"}
-                          </span>
-                        </td>
-
-                        <td>
-
-                          <select
-                            className="status-selector"
-                            value={
-                              order.orderStatus ||
-                              "pending"
-                            }
-                            disabled={
-                              updatingId ===
-                              order._id
-                            }
-                            onChange={(e) =>
-                              handleStatusChange(
-                                order._id,
-                                e.target
-                                  .value
-                              )
-                            }
-                          >
-
-                            {statuses.map(
-                              (s) => (
-                                <option
-                                  key={s}
-                                  value={s}
-                                >
-                                  {s}
-                                </option>
-                              )
-                            )}
-
-                          </select>
-
-                        </td>
-                      </tr>
-                    )
-                  )}
-
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-
-      </div>
+                        {statuses.map((s) => (
+                          <option key={s} value={s}>
+                            {s}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
 
 export default AdminDashboard;
-
-
-

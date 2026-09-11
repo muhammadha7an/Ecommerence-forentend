@@ -1,9 +1,16 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import authService from "../services/authService";
+import Icon from "../components/Icon";
+import PasswordInput from "../components/PasswordInput";
+import "../style/dashboard/console.css";
+import "../style/pages/account.css";
 
 function Account() {
     const navigate = useNavigate();
+    const location = useLocation();
+    // Rendered both at /account (store layout) and /dashboard/profile (account portal)
+    const isEmbedded = location.pathname.startsWith("/dashboard");
 
     const [user, setUser] = useState(null);
 
@@ -167,9 +174,9 @@ function Account() {
 
     if (loading) {
         return (
-            <div className="account-page">
-                <div className="account-spinner-container">
-                    <div className="account-spinner"></div>
+            <div className={`account-page ${isEmbedded ? "account-page--embedded" : ""}`}>
+                <div className="ui-loading">
+                    <span className="ui-spinner ui-spinner--lg" aria-hidden="true"></span>
                     <p>Loading your account...</p>
                 </div>
             </div>
@@ -180,133 +187,91 @@ function Account() {
         ? user.name.charAt(0).toUpperCase()
         : "U";
 
+    const isAdmin = user?.role === "admin";
+    const dashboardPath = isAdmin ? "/admin/dashboard" : "/dashboard";
+
+    const quickLinks = [
+        { to: dashboardPath, icon: "grid", title: isAdmin ? "Admin Panel" : "Dashboard", text: "Overview & metrics" },
+        { to: "/dashboard/orders", icon: "package", title: "My Orders", text: "History & tracking" },
+        { to: "/wishlist", icon: "heart", title: "Saved Wishlist", text: "Your favourite pieces" },
+        { to: "/cart", icon: "bag", title: "Shopping Cart", text: "Review items" },
+    ];
+
     return (
-        <div className="account-page">
-            <div className="account-container">
+        <div className={`account-page ${isEmbedded ? "account-page--embedded" : ""}`}>
+            <div className="console-page account-container">
 
-                {/* =========================
-                    ACCOUNT HEADER
-                ========================== */}
-                <div className="account-header-card">
-
-                    <div className="avatar-circle">
-                        {userInitial}
+                {/* ACCOUNT HEADER */}
+                <section className="console-welcome">
+                    <div className="console-welcome__user">
+                        <span className="console-avatar">{userInitial}</span>
+                        <div style={{ minWidth: 0 }}>
+                            <p>{isAdmin ? "Administrator account" : "Account settings"}</p>
+                            <h1>{user?.name || "Account Settings"}</h1>
+                            <p>{user?.email || "Manage your profile and security"}</p>
+                        </div>
                     </div>
 
-                    <div className="account-header-info">
-                        <h1>
-                            {user?.name || "Account Settings"}
-                        </h1>
-
-                        <p>
-                            {user?.email ||
-                                "Manage your profile and security"}
-                        </p>
+                    <div className="console-head__actions">
+                        <button
+                            type="button"
+                            className="ui-btn ui-btn--accent"
+                            onClick={() => navigate(dashboardPath)}
+                        >
+                            <Icon name="grid" />
+                            {isAdmin ? "Admin Dashboard" : "User Dashboard"}
+                        </button>
                     </div>
+                </section>
 
-                    {/* Dashboard Button */}
-                    <button
-                        type="button"
-                        className="btn btn-primary  dashboard-btn"
-                        onClick={() => navigate(user?.role === "admin" ? "/admin/dashboard" : "/dashboard")}
-                    >
-                        {user?.role === "admin" ? "Admin Dashboard" : "User Dashboard"}
-                    </button>
-
+                {/* QUICK NAVIGATION */}
+                <div className="console-quick">
+                    {quickLinks.map((item) => (
+                        <Link key={item.title} to={item.to} className="console-quick__item">
+                            <span className="console-quick__icon"><Icon name={item.icon} /></span>
+                            <span className="console-quick__text">
+                                <strong>{item.title}</strong>
+                                <small>{item.text}</small>
+                            </span>
+                            <Icon name="chevronRight" className="console-quick__arrow" />
+                        </Link>
+                    ))}
                 </div>
 
-                {/* =========================
-                    ACCOUNT QUICK NAVIGATION
-                ========================== */}
-                <div className="account-quick-nav-grid">
-                    <button
-                        type="button"
-                        className="account-nav-card"
-                        onClick={() => navigate(user?.role === "admin" ? "/admin/dashboard" : "/dashboard")}
-                    >
-                        <span className="nav-card-icon">📊</span>
-                        <div className="nav-card-text">
-                            <strong>{user?.role === "admin" ? "Admin Panel" : "Dashboard"}</strong>
-                            <small>Overview & metrics</small>
+                {/* PROFILE INFORMATION */}
+                <section className="console-panel">
+                    <div className="console-panel__head">
+                        <div>
+                            <h2>Profile information</h2>
+                            <p>Update your personal information and delivery details.</p>
                         </div>
-                    </button>
-
-                    <button
-                        type="button"
-                        className="account-nav-card"
-                        onClick={() => navigate("/dashboard/orders")}
-                    >
-                        <span className="nav-card-icon">📦</span>
-                        <div className="nav-card-text">
-                            <strong>My Orders</strong>
-                            <small>History & tracking</small>
-                        </div>
-                    </button>
-
-                    <button
-                        type="button"
-                        className="account-nav-card"
-                        onClick={() => navigate("/wishlist")}
-                    >
-                        <span className="nav-card-icon">❤️</span>
-                        <div className="nav-card-text">
-                            <strong>Saved Wishlist</strong>
-                            <small>Saved favorite pieces</small>
-                        </div>
-                    </button>
-
-                    <button
-                        type="button"
-                        className="account-nav-card"
-                        onClick={() => navigate("/cart")}
-                    >
-                        <span className="nav-card-icon">🛒</span>
-                        <div className="nav-card-text">
-                            <strong>Shopping Cart</strong>
-                            <small>Review items</small>
-                        </div>
-                    </button>
-                </div>
-
-                {/* =========================
-                    PROFILE INFORMATION
-                ========================== */}
-                <section className="account-section">
-
-                    <div className="section-header">
-                        <h2>Profile Information</h2>
-
-                        <p>
-                            Update your personal information
-                            and contact details.
-                        </p>
                     </div>
 
-                    {profileMessage && (
-                        <div className="alert-message success-message">
-                            {profileMessage}
-                        </div>
-                    )}
+                    <form onSubmit={handleProfileSubmit} className="console-panel__body account-form">
+                        {profileMessage && (
+                            <div className="ui-alert ui-alert--success" role="status">
+                                <Icon name="checkCircle" />
+                                <span>{profileMessage}</span>
+                            </div>
+                        )}
 
-                    {profileError && (
-                        <div className="alert-message error-message">
-                            {profileError}
-                        </div>
-                    )}
+                        {profileError && (
+                            <div className="ui-alert ui-alert--error" role="alert">
+                                <Icon name="alertCircle" />
+                                <span>{profileError}</span>
+                            </div>
+                        )}
 
-                    <form onSubmit={handleProfileSubmit}>
-
-                        <div className="account-form-grid">
-
-                            <div className="form-group">
-                                <label htmlFor="name">
-                                    Full Name
-                                </label>
-
+                        <h3 className="account-form__legend">Personal details</h3>
+                        <div className="ui-form-grid">
+                            <div className="ui-field">
+                                <label className="ui-label" htmlFor="name">Full name</label>
                                 <input
                                     id="name"
+                                    className="ui-input"
                                     type="text"
                                     name="name"
+                                    autoComplete="name"
                                     value={profile.name}
                                     onChange={handleProfileChange}
                                     placeholder="Enter your full name"
@@ -314,210 +279,200 @@ function Account() {
                                 />
                             </div>
 
-                            <div className="form-group">
-                                <label htmlFor="email">
-                                    Email Address
-                                </label>
-
+                            <div className="ui-field">
+                                <label className="ui-label" htmlFor="email">Email address</label>
                                 <input
                                     id="email"
+                                    className="ui-input"
                                     type="email"
                                     name="email"
+                                    autoComplete="email"
                                     value={profile.email}
                                     onChange={handleProfileChange}
                                     placeholder="Enter your email"
                                     required
                                 />
                             </div>
+                        </div>
 
-                            <div className="form-group">
-                                <label htmlFor="street">
-                                    Street Address
-                                </label>
-
+                        <h3 className="account-form__legend">Delivery address</h3>
+                        <div className="ui-form-grid">
+                            <div className="ui-field ui-field--full">
+                                <label className="ui-label" htmlFor="street">Street address</label>
                                 <input
                                     id="street"
+                                    className="ui-input"
                                     type="text"
                                     name="street"
+                                    autoComplete="street-address"
                                     value={address.street}
                                     onChange={handleAddressChange}
                                     placeholder="Street address"
                                 />
                             </div>
 
-                            <div className="form-group">
-                                <label htmlFor="city">
-                                    City
-                                </label>
-
+                            <div className="ui-field">
+                                <label className="ui-label" htmlFor="city">City</label>
                                 <input
                                     id="city"
+                                    className="ui-input"
                                     type="text"
                                     name="city"
+                                    autoComplete="address-level2"
                                     value={address.city}
                                     onChange={handleAddressChange}
                                     placeholder="City"
                                 />
                             </div>
 
-                            <div className="form-group">
-                                <label htmlFor="postalCode">
-                                    Postal Code
-                                </label>
-
+                            <div className="ui-field">
+                                <label className="ui-label" htmlFor="postalCode">Postal code</label>
                                 <input
                                     id="postalCode"
+                                    className="ui-input"
                                     type="text"
                                     name="postalCode"
+                                    autoComplete="postal-code"
                                     value={address.postalCode}
                                     onChange={handleAddressChange}
                                     placeholder="Postal code"
                                 />
                             </div>
 
-                            <div className="form-group">
-                                <label htmlFor="phone">
-                                    Phone
-                                </label>
-
+                            <div className="ui-field">
+                                <label className="ui-label" htmlFor="phone">Phone</label>
                                 <input
                                     id="phone"
+                                    className="ui-input"
                                     type="text"
                                     name="phone"
+                                    autoComplete="tel"
                                     value={address.phone}
                                     onChange={handleAddressChange}
                                     placeholder="Phone number"
                                 />
                             </div>
-
                         </div>
 
-                        <div className="form-actions">
+                        <div className="account-form__actions">
                             <button
                                 type="submit"
-                                className="btn btn-primary"
+                                className="ui-btn"
                                 disabled={profileLoading}
                             >
-                                {profileLoading
-                                    ? "Updating..."
-                                    : "Save Profile"}
+                                {profileLoading ? (
+                                    <>
+                                        <span className="ui-spinner" aria-hidden="true"></span>
+                                        Updating...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Icon name="check" />
+                                        Save Profile
+                                    </>
+                                )}
                             </button>
                         </div>
-
                     </form>
                 </section>
 
-                {/* =========================
-                    CHANGE PASSWORD
-                ========================== */}
-                <section className="account-section">
-
-                    <div className="section-header">
-                        <h2>Change Password</h2>
-
-                        <p>
-                            Update your password to keep your
-                            account secure.
-                        </p>
-                    </div>
-
-                    {passwordMessage && (
-                        <div className="alert-message success-message">
-                            {passwordMessage}
+                <div className="account-grid">
+                    {/* CHANGE PASSWORD */}
+                    <section className="console-panel">
+                        <div className="console-panel__head">
+                            <div>
+                                <h2>Change password</h2>
+                                <p>Update your password to keep your account secure.</p>
+                            </div>
                         </div>
-                    )}
 
-                    {passwordError && (
-                        <div className="alert-message error-message">
-                            {passwordError}
-                        </div>
-                    )}
+                        <form onSubmit={handlePasswordSubmit} className="console-panel__body account-form">
+                            {passwordMessage && (
+                                <div className="ui-alert ui-alert--success" role="status">
+                                    <Icon name="checkCircle" />
+                                    <span>{passwordMessage}</span>
+                                </div>
+                            )}
 
-                    <form onSubmit={handlePasswordSubmit}>
+                            {passwordError && (
+                                <div className="ui-alert ui-alert--error" role="alert">
+                                    <Icon name="alertCircle" />
+                                    <span>{passwordError}</span>
+                                </div>
+                            )}
 
-                        <div className="account-form-grid">
-
-                            <div className="form-group">
-                                <label htmlFor="currentPassword">
-                                    Current Password
-                                </label>
-
-                                <input
+                            <div className="ui-field">
+                                <label className="ui-label" htmlFor="currentPassword">Current password</label>
+                                <PasswordInput
                                     id="currentPassword"
-                                    type="password"
                                     name="currentPassword"
-                                    value={
-                                        passwordData.currentPassword
-                                    }
-                                    onChange={
-                                        handlePasswordChange
-                                    }
+                                    autoComplete="current-password"
+                                    value={passwordData.currentPassword}
+                                    onChange={handlePasswordChange}
                                     placeholder="Enter current password"
                                     required
                                 />
                             </div>
 
-                            <div className="form-group">
-                                <label htmlFor="newPassword">
-                                    New Password
-                                </label>
-
-                                <input
+                            <div className="ui-field">
+                                <label className="ui-label" htmlFor="newPassword">New password</label>
+                                <PasswordInput
                                     id="newPassword"
-                                    type="password"
                                     name="newPassword"
-                                    value={
-                                        passwordData.newPassword
-                                    }
-                                    onChange={
-                                        handlePasswordChange
-                                    }
-                                    placeholder="Enter new password"
+                                    autoComplete="new-password"
+                                    value={passwordData.newPassword}
+                                    onChange={handlePasswordChange}
+                                    placeholder="At least 6 characters"
                                     minLength="6"
                                     required
                                 />
                             </div>
 
-                        </div>
+                            <div className="account-form__actions">
+                                <button
+                                    type="submit"
+                                    className="ui-btn"
+                                    disabled={passwordLoading}
+                                >
+                                    {passwordLoading ? (
+                                        <>
+                                            <span className="ui-spinner" aria-hidden="true"></span>
+                                            Updating...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Icon name="lock" />
+                                            Update Password
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </section>
 
-                        <div className="form-actions">
+                    {/* SESSION */}
+                    <section className="console-panel account-session">
+                        <div className="console-panel__head">
+                            <div>
+                                <h2>Account session</h2>
+                                <p>Sign out from your account on this device.</p>
+                            </div>
+                        </div>
+                        <div className="console-panel__body">
+                            <p className="account-session__text">
+                                Your cart and wishlist are saved to this browser and will be here when you sign back in.
+                            </p>
                             <button
-                                type="submit"
-                                className="btn btn-primary"
-                                disabled={passwordLoading}
+                                type="button"
+                                className="ui-btn ui-btn--danger-soft"
+                                onClick={handleLogout}
                             >
-                                {passwordLoading
-                                    ? "Updating..."
-                                    : "Update Password"}
+                                <Icon name="logOut" />
+                                Sign Out
                             </button>
                         </div>
-
-                    </form>
-                </section>
-
-                {/* =========================
-                    LOGOUT
-                ========================== */}
-                <section className="account-section danger-zone">
-
-                    <div className="section-header">
-                        <h2>Account Session</h2>
-
-                        <p>
-                            Sign out from your account on this
-                            device.
-                        </p>
-                    </div>
-
-                    <button
-                        type="button"
-                        className="btn btn-danger"
-                        onClick={handleLogout}
-                    >
-                        Sign Out
-                    </button>
-
-                </section>
+                    </section>
+                </div>
 
             </div>
         </div>

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import authService from "../services/authService";
- 
+import AuthShell from "../components/AuthShell";
+import PasswordInput from "../components/PasswordInput";
+import Icon from "../components/Icon";
 
 function Login() {
   const navigate = useNavigate();
@@ -40,74 +42,72 @@ function Login() {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        {/* Header */}
-        <div className="auth-header">
-          <h1>Welcome Back</h1>
-          <p>Please enter your credentials to log in to your account.</p>
+    <AuthShell
+      title="Welcome back"
+      subtitle="Sign in to track orders, manage your wishlist and check out faster."
+      icon="user"
+      footer={
+        <p>
+          Don't have an account?{" "}
+          <Link to="/signup" className="ui-link">
+            Create Account
+          </Link>
+        </p>
+      }
+    >
+      {error && (
+        <div className="ui-alert ui-alert--error" role="alert">
+          <Icon name="alertCircle" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="auth-form">
+        <div className="ui-field">
+          <label className="ui-label" htmlFor="email">Email address</label>
+          <input
+            id="email"
+            className="ui-input"
+            type="email"
+            name="email"
+            autoComplete="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="name@example.com"
+            required
+          />
         </div>
 
-        {/* Error Alert */}
-        {error && (
-          <div className="alert-message error-message">
-            {error}
-          </div>
-        )}
-
-        {/* Login Form */}
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="email">Email Address</label>
-            <input
-              id="email"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="name@example.com"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <div className="label-wrapper">
-              <label htmlFor="password">Password</label>
-              <Link to="/forgot-password" className="auth-link link-forgot">
-                Forgot Password?
-              </Link>
-            </div>
-            <input
-              id="password"
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={loading}
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </form>
-
-        {/* Footer */}
-        <div className="auth-footer">
-          <p>
-            Don't have an account?{" "}
-            <Link to="/signup" className="auth-link highlight">
-              Create Account
+        <div className="ui-field">
+          <div className="ui-label">
+            <label htmlFor="password">Password</label>
+            <Link to="/forgot-password" className="ui-link">
+              Forgot password?
             </Link>
-          </p>
+          </div>
+          <PasswordInput
+            id="password"
+            name="password"
+            autoComplete="current-password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="Enter your password"
+            required
+          />
         </div>
-      </div>
-    </div>
+
+        <button type="submit" className="ui-btn ui-btn--lg ui-btn--block" disabled={loading}>
+          {loading ? (
+            <>
+              <span className="ui-spinner" aria-hidden="true" />
+              Signing in...
+            </>
+          ) : (
+            "Sign in"
+          )}
+        </button>
+      </form>
+    </AuthShell>
   );
 }
 

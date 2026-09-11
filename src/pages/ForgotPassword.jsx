@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import authService from "../services/authService";
+import AuthShell from "../components/AuthShell";
+import Icon from "../components/Icon";
 
 function ForgotPassword() {
   const navigate = useNavigate();
@@ -48,69 +50,61 @@ function ForgotPassword() {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
+    <AuthShell
+      title="Forgot your password?"
+      subtitle="Enter the email you signed up with and we'll send you a secure link to reset it."
+      icon="lock"
+      footer={
+        <p>
+          Remembered your password?{" "}
+          <Link to="/login" className="ui-link">
+            Sign in
+          </Link>
+        </p>
+      }
+    >
+      {message && (
+        <div className="ui-alert ui-alert--success" role="status">
+          <Icon name="mailCheck" />
+          <span>{message}</span>
+        </div>
+      )}
 
-        <div className="auth-header">
-          <h1>Forgot Password</h1>
+      {error && (
+        <div className="ui-alert ui-alert--error" role="alert">
+          <Icon name="alertCircle" />
+          <span>{error}</span>
+        </div>
+      )}
 
-          <p>
-            Enter your email address and we'll send you a link to reset
-            your password.
-          </p>
+      <form onSubmit={handleSubmit} className="auth-form">
+        <div className="ui-field">
+          <label className="ui-label" htmlFor="email">Email address</label>
+          <input
+            id="email"
+            className="ui-input"
+            type="email"
+            name="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="name@example.com"
+            required
+          />
         </div>
 
-        {/* Success Message */}
-        {message && (
-          <div className="alert-message success-message">
-            {message}
-          </div>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <div className="alert-message error-message">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="auth-form">
-
-          <div className="form-group">
-            <label htmlFor="email">Email Address</label>
-
-            <input
-              id="email"
-              type="email"
-              name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="name@example.com"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={loading}
-          >
-            {loading ? "Checking..." : "Send Reset Link"}
-          </button>
-
-        </form>
-
-        <div className="auth-footer">
-          <p>
-            Remembered your password?{" "}
-            <Link to="/login" className="auth-link highlight">
-              Login
-            </Link>
-          </p>
-        </div>
-
-      </div>
-    </div>
+        <button type="submit" className="ui-btn ui-btn--lg ui-btn--block" disabled={loading}>
+          {loading ? (
+            <>
+              <span className="ui-spinner" aria-hidden="true" />
+              Sending link...
+            </>
+          ) : (
+            "Send Reset Link"
+          )}
+        </button>
+      </form>
+    </AuthShell>
   );
 }
 

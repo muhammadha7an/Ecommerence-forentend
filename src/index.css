@@ -1,2 +1,1 @@
-* { box-sizing: border-box; }
-body { margin: 0; font-family: Georgia, 'Times New Roman', serif; }
+/* Base reset lives in style/global/base.css (imported in App.jsx). */

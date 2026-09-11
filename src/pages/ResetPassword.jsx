@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import authService from "../services/authService";
- 
+import AuthShell from "../components/AuthShell";
+import PasswordInput from "../components/PasswordInput";
+import Icon from "../components/Icon";
 
 function ResetPassword() {
   const { token } = useParams();
@@ -53,75 +55,72 @@ function ResetPassword() {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        {/* Header */}
-        <div className="auth-header">
-          <h1>Reset Password</h1>
-          <p>Please enter and confirm your new password below.</p>
+    <AuthShell
+      title="Set a new password"
+      subtitle="Choose a password you haven't used before. The reset link expires after 15 minutes."
+      icon="lock"
+      footer={
+        <p>
+          Remembered your password?{" "}
+          <Link to="/login" className="ui-link">
+            Sign in
+          </Link>
+        </p>
+      }
+    >
+      {message && (
+        <div className="ui-alert ui-alert--success" role="status">
+          <Icon name="checkCircle" />
+          <span>{message}</span>
+        </div>
+      )}
+
+      {error && (
+        <div className="ui-alert ui-alert--error" role="alert">
+          <Icon name="alertCircle" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="auth-form">
+        <div className="ui-field">
+          <label className="ui-label" htmlFor="password">New password</label>
+          <PasswordInput
+            id="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="At least 6 characters"
+            minLength="6"
+            required
+          />
         </div>
 
-        {/* Alert Banners */}
-        {message && (
-          <div className="alert-message success-message">
-            {message}
-          </div>
-        )}
-
-        {error && (
-          <div className="alert-message error-message">
-            {error}
-          </div>
-        )}
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="password">New Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              minLength="6"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="confirmPassword">Confirm Password</label>
-            <input
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="••••••••"
-              minLength="6"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={loading}
-          >
-            {loading ? "Resetting..." : "Reset Password"}
-          </button>
-        </form>
-
-        {/* Footer */}
-        <div className="auth-footer">
-          <p>
-            Remembered your password?{" "}
-            <Link to="/login" className="auth-link highlight">
-              Login
-            </Link>
-          </p>
+        <div className="ui-field">
+          <label className="ui-label" htmlFor="confirmPassword">Confirm password</label>
+          <PasswordInput
+            id="confirmPassword"
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Repeat the new password"
+            minLength="6"
+            required
+          />
         </div>
-      </div>
-    </div>
+
+        <button type="submit" className="ui-btn ui-btn--lg ui-btn--block" disabled={loading}>
+          {loading ? (
+            <>
+              <span className="ui-spinner" aria-hidden="true" />
+              Updating password...
+            </>
+          ) : (
+            "Reset Password"
+          )}
+        </button>
+      </form>
+    </AuthShell>
   );
 }
 

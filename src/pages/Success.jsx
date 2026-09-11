@@ -5,6 +5,8 @@ import jsPDF from 'jspdf'
 
 import { clearCart } from '../redux/slices/cartSlice'
 import { API_BASE_URL } from '../services/api'
+import Icon from '../components/Icon'
+import '../style/pages/success.css'
 
 export default function Success() {
     const [searchParams] = useSearchParams()
@@ -74,7 +76,7 @@ export default function Success() {
         if (order.orderNumber) return `#${order.orderNumber}`
         if (order._id) return `#${order._id.slice(-8).toUpperCase()}`
         if (order.id) return `#${order.id.slice(-8).toUpperCase()}`
-        return `#${order.sessionId.slice(-10).toUpperCase()}`
+        return order.sessionId ? `#${order.sessionId.slice(-10).toUpperCase()}` : '#ORDER'
     }
 
     /*
@@ -189,6 +191,23 @@ export default function Success() {
 
         currentY += 6
 
+        // --- SUBTOTAL / SHIPPING ---
+        if (order.subtotalAmount !== null && order.subtotalAmount !== undefined) {
+            doc.setFont('helvetica', 'normal')
+            doc.setFontSize(10)
+            doc.setTextColor(75, 85, 99)
+            doc.text('Subtotal:', 122, currentY + 4)
+            doc.text(formatAmount(order.subtotalAmount, order.currency), 188, currentY + 4, { align: 'right' })
+            doc.text('Shipping:', 122, currentY + 11)
+            doc.text(
+                Number(order.shippingFee || 0) > 0 ? formatAmount(order.shippingFee, order.currency) : 'FREE',
+                188,
+                currentY + 11,
+                { align: 'right' }
+            )
+            currentY += 16
+        }
+
         // --- TOTAL SECTION ---
         doc.setFillColor(...lightGray)
         doc.rect(115, currentY, 80, 18, 'F')
@@ -223,9 +242,9 @@ export default function Success() {
     */
     if (loading) {
         return (
-            <div className="page-content">
-                <section className="success-page success-page-loading">
-                    <div className="loading-spinner"></div>
+            <div className="success-page">
+                <section className="success-card success-card--state">
+                    <span className="ui-spinner ui-spinner--lg" aria-hidden="true"></span>
                     <h1>Confirming your order...</h1>
                     <p>Please wait while we retrieve your payment information.</p>
                 </section>
@@ -240,14 +259,21 @@ export default function Success() {
     */
     if (error) {
         return (
-            <div className="page-content">
-                <section className="success-page success-page-error">
-                    <div className="error-icon">!</div>
-                    <h1>Something went wrong</h1>
-                    <p className="error-message">{error}</p>
-                    <Link to="/shop" className="button">
-                        Continue Shopping
-                    </Link>
+            <div className="success-page">
+                <section className="success-card success-card--state">
+                    <span className="success-badge success-badge--error">
+                        <Icon name="alertTriangle" />
+                    </span>
+                    <h1>We couldn't confirm this order</h1>
+                    <p className="success-error">{error}</p>
+                    <div className="success-actions">
+                        <Link to="/dashboard/orders" className="ui-btn ui-btn--secondary">
+                            View My Orders
+                        </Link>
+                        <Link to="/shop" className="ui-btn">
+                            Continue Shopping
+                        </Link>
+                    </div>
                 </section>
             </div>
         )
@@ -263,43 +289,44 @@ export default function Success() {
     |--------------------------------------------------------------------------
     */
     return (
-        <div className="page-content">
-            <section className="success-page">
-                <div className="success-icon">✓</div>
+        <div className="success-page">
+            <section className="success-card">
+                <div className="success-hero">
+                    <span className="success-badge">
+                        <Icon name="check" strokeWidth={2.4} />
+                    </span>
+                    <h1>Thank you for your order</h1>
+                    <p>
+                        Your payment was successful and your order has been placed.
+                        You can follow its progress from your orders page.
+                    </p>
+                </div>
 
-                <h1>Thank You for Your Order!</h1>
-                <p className="success-message">
-                    Your payment was successful and your order has been placed.
-                </p>
-
-                {/* ORDER CARD */}
-                <div className="order-card">
-                    <div className="order-card-header">
-                        <div>
-                            <span>Order ID</span>
-                            <strong>{displayOrderId}</strong>
-                        </div>
-                        <span className="payment-status">Paid</span>
+                <dl className="success-meta">
+                    <div>
+                        <dt>Order ID</dt>
+                        <dd>{displayOrderId}</dd>
                     </div>
-
-                    <div className="customer-details">
-                        <div>
-                            <span>Customer</span>
-                            <strong>{order.customer?.name || 'N/A'}</strong>
-                        </div>
-
-                        <div>
-                            <span>Email</span>
-                            <strong>{order.customer?.email || 'N/A'}</strong>
-                        </div>
+                    <div>
+                        <dt>Customer</dt>
+                        <dd>{order.customer?.name || 'N/A'}</dd>
                     </div>
+                    <div>
+                        <dt>Email</dt>
+                        <dd>{order.customer?.email || 'N/A'}</dd>
+                    </div>
+                    <div>
+                        <dt>Payment</dt>
+                        <dd><span className="ui-badge ui-badge--dot ui-badge--success">Paid</span></dd>
+                    </div>
+                </dl>
 
-                    {/* ORDER ITEMS */}
-                    <div className="order-items">
-                        <h2>Your Order</h2>
-
+                <div className="success-items">
+                    <h2>Your order</h2>
+                    <ul>
                         {order.items.map((item, index) => (
-                            <div className="order-item" key={item.id || index}>
+                            <li className="success-item" key={item.id || index}>
+                                <span className="success-item__icon"><Icon name="package" /></span>
                                 <div>
                                     <h3>{item.name}</h3>
                                     <p>Quantity: {item.quantity}</p>
@@ -310,13 +337,29 @@ export default function Success() {
                                         item.currency
                                     )}
                                 </strong>
-                            </div>
+                            </li>
                         ))}
-                    </div>
+                    </ul>
 
-                    {/* TOTAL */}
-                    <div className="order-total">
-                        <span>Total Paid</span>
+                    {order.subtotalAmount !== null && order.subtotalAmount !== undefined && (
+                        <div className="success-breakdown">
+                            <div>
+                                <span>Subtotal</span>
+                                <span>{formatAmount(order.subtotalAmount, order.currency)}</span>
+                            </div>
+                            <div>
+                                <span>{order.shippingMethod || 'Shipping'}</span>
+                                <span>
+                                    {Number(order.shippingFee || 0) > 0
+                                        ? formatAmount(order.shippingFee, order.currency)
+                                        : 'FREE'}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="success-total">
+                        <span>Total paid</span>
                         <strong>
                             {formatAmount(
                                 order.amountTotal,
@@ -324,23 +367,26 @@ export default function Success() {
                             )}
                         </strong>
                     </div>
+                </div>
 
-                    {/* ACTIONS */}
-                    <div className="success-actions">
-                        <button
-                            type="button"
-                            className="button"
-                            onClick={downloadReceipt}
-                        >
-                            Download Receipt
-                        </button>
-
-                        <Link to="/shop" className="button secondary">
-                            Continue Shopping
-                        </Link>
-                    </div>
+                <div className="success-actions">
+                    <button
+                        type="button"
+                        className="ui-btn ui-btn--secondary"
+                        onClick={downloadReceipt}
+                    >
+                        <Icon name="download" />
+                        Download Receipt
+                    </button>
+                    <Link to="/dashboard/orders" className="ui-btn ui-btn--secondary">
+                        <Icon name="package" />
+                        Track Order
+                    </Link>
+                    <Link to="/shop" className="ui-btn">
+                        Continue Shopping
+                    </Link>
                 </div>
             </section>
         </div>
     )
-} 
+}

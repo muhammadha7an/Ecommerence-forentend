@@ -4,6 +4,17 @@ import { useDispatch } from "react-redux";
 import authService from "../services/authService";
 import { getImageUrl } from "../services/api";
 import { removeProductLocally } from "../redux/slices/productsSlice";
+import Icon from "../components/Icon";
+import StatusBadge from "../components/StatusBadge";
+import EmptyState from "../components/EmptyState";
+import Modal from "../components/Modal";
+import { getStockStatus, LOW_STOCK_LEVEL } from "../utils/commerce";
+
+const STOCK_BADGE = {
+  in: { label: "In Stock", tone: "success" },
+  low: { label: "Low Stock", tone: "warning" },
+  out: { label: "Out of Stock", tone: "danger" },
+};
 
 function AdminProducts() {
   const navigate = useNavigate();
@@ -18,6 +29,7 @@ function AdminProducts() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const [deleteError, setDeleteError] = useState("");
 
   const loadCatalog = useCallback(async () => {
     setLoading(true);
@@ -66,6 +78,7 @@ function AdminProducts() {
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
+    setDeleteError("");
     try {
       const targetId = deleteTarget._id || deleteTarget.id;
       await authService.deleteProduct(targetId);
@@ -75,80 +88,136 @@ function AdminProducts() {
       setDeleteTarget(null);
       setTimeout(() => setFeedback(""), 4000);
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete product");
+      setDeleteError(err.response?.data?.message || "Failed to delete product");
     } finally {
       setDeleting(false);
     }
   };
 
+  const lowStockCount = products.filter((p) => getStockStatus(p) === "low").length;
+  const outOfStockCount = products.filter((p) => getStockStatus(p) === "out").length;
+
   return (
-    <div className="dashboard-page">
-      <div className="dashboard-container">
-        {/* Header */}
-        <div className="dashboard-header">
-          <div>
-            <span className="dashboard-welcome">Catalog Management</span>
-            <h1>Products ({products.length})</h1>
-            <p>Add, edit, upload images, and manage store inventory</p>
-          </div>
-
-          <div className="dashboard-actions">
-            <Link className="dashboard-view-btn" to="/admin/products/add">
-              + Add New Product
-            </Link>
-          </div>
+    <div className="console-page">
+      {/* Header */}
+      <div className="console-head">
+        <div>
+          <span className="console-head__eyebrow">Catalog management</span>
+          <h1>
+            Products <span className="console-count">{products.length}</span>
+          </h1>
+          <p>Add, edit, upload images and manage store inventory.</p>
         </div>
 
-        {feedback && <div className="alert-message success-message">{feedback}</div>}
-        {error && <div className="dashboard-panel dashboard-error">{error}</div>}
+        <div className="console-head__actions">
+          <Link className="ui-btn" to="/admin/products/add">
+            <Icon name="plus" />
+            Add New Product
+          </Link>
+        </div>
+      </div>
 
-        {/* Search & Filter Toolbar */}
-        <div className="admin-toolbar-row">
-          <div className="admin-search-input">
-            <input
-              type="text"
-              placeholder="Search by product name or keyword..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+      {feedback && (
+        <div className="ui-alert ui-alert--success" role="status">
+          <Icon name="checkCircle" />
+          <span>{feedback}</span>
+        </div>
+      )}
+      {error && (
+        <div className="ui-alert ui-alert--error" role="alert">
+          <Icon name="alertCircle" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {!loading && products.length > 0 && (
+        <div className="console-stats console-stats--3">
+          <div className="console-stat">
+            <div className="console-stat__top">
+              <span>Total products</span>
+              <span className="console-stat__icon"><Icon name="tag" /></span>
+            </div>
+            <strong className="console-stat__value">{products.length}</strong>
           </div>
-
-          <div className="admin-filter-dropdowns">
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-            >
-              <option value="all">All Categories</option>
-              {categories.map((c) => (
-                <option key={c._id || c.id} value={c.name}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+          <div className="console-stat">
+            <div className="console-stat__top">
+              <span>Low stock ({LOW_STOCK_LEVEL} or fewer)</span>
+              <span className="console-stat__icon console-stat__icon--warning"><Icon name="alertTriangle" /></span>
+            </div>
+            <strong className="console-stat__value">{lowStockCount}</strong>
+          </div>
+          <div className="console-stat">
+            <div className="console-stat__top">
+              <span>Out of stock</span>
+              <span className="console-stat__icon console-stat__icon--clay"><Icon name="package" /></span>
+            </div>
+            <strong className="console-stat__value">{outOfStockCount}</strong>
           </div>
         </div>
+      )}
 
-        {loading ? (
-          <div className="dashboard-loading">
-            <div className="dashboard-spinner"></div>
+      {/* Toolbar */}
+      <div className="console-toolbar">
+        <label className="ui-input-icon">
+          <Icon name="search" />
+          <span className="visually-hidden">Search products</span>
+          <input
+            type="search"
+            className="ui-input"
+            placeholder="Search by product name or keyword..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </label>
+
+        <select
+          className="ui-select"
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          aria-label="Filter by category"
+        >
+          <option value="all">All Categories</option>
+          {categories.map((c) => (
+            <option key={c._id || c.id} value={c.name}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+
+        <div className="console-toolbar__spacer" />
+        {!loading && (
+          <span className="console-toolbar__meta">
+            {filteredProducts.length} of {products.length} shown
+          </span>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="console-panel">
+          <div className="ui-loading">
+            <span className="ui-spinner ui-spinner--lg" aria-hidden="true"></span>
             <p>Loading catalog products from database...</p>
           </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="dashboard-empty-panel">
-            <div className="dashboard-empty-icon">🏷️</div>
-            <h2>No products found</h2>
-            <p>
-              {products.length === 0
-                ? "No products exist in the database yet."
-                : "No products match your search/filter criteria."}
-            </p>
-            <Link className="dashboard-view-btn" to="/admin/products/add">
-              Add Your First Product
-            </Link>
-          </div>
-        ) : (
-          <div className="dashboard-panel order-table-wrap">
-            <table className="dashboard-table admin-products-table">
+        </div>
+      ) : filteredProducts.length === 0 ? (
+        <EmptyState
+          icon="tag"
+          title="No products found"
+          text={
+            products.length === 0
+              ? "No products exist in the database yet."
+              : "No products match your search or filter."
+          }
+        >
+          <Link className="ui-btn" to="/admin/products/add">
+            <Icon name="plus" />
+            Add Your First Product
+          </Link>
+        </EmptyState>
+      ) : (
+        <div className="console-panel">
+          <div className="console-table-wrap">
+            <table className="console-table console-table--stack">
               <thead>
                 <tr>
                   <th>Product</th>
@@ -156,83 +225,80 @@ function AdminProducts() {
                   <th>Price</th>
                   <th>Stock</th>
                   <th>Status</th>
-                  <th>Actions</th>
+                  <th className="is-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredProducts.map((product) => {
                   const prodId = product._id || product.id;
                   const img = getImageUrl(product.image);
+                  const stockStatus = getStockStatus(product);
+                  const badge = STOCK_BADGE[stockStatus];
 
                   return (
                     <tr key={prodId}>
-                      <td>
-                        <div className="table-product-cell">
+                      <td className="is-primary" data-label="Product">
+                        <div className="console-cell">
                           <img
                             src={img}
                             alt={product.name}
-                            className="product-table-thumb"
+                            className="console-thumb"
                             onError={(e) => {
                               e.target.src =
                                 "https://images.unsplash.com/photo-1544816155-12df9643f363?w=100&q=80";
                             }}
                           />
-                          <div>
+                          <div className="console-cell__stack">
                             <strong>{product.name}</strong>
-                            {product.isFeatured && (
-                              <span className="badge-pill featured">Featured</span>
-                            )}
-                            {(product.isNew || product.isNewProduct) && (
-                              <span className="badge-pill new">New</span>
+                            {(product.isFeatured || product.isNew || product.isNewProduct) && (
+                              <span className="console-tags">
+                                {product.isFeatured && <span className="ui-badge ui-badge--clay">Featured</span>}
+                                {(product.isNew || product.isNewProduct) && (
+                                  <span className="ui-badge ui-badge--info">New</span>
+                                )}
+                              </span>
                             )}
                           </div>
                         </div>
                       </td>
-                      <td>{product.category || "Uncategorized"}</td>
-                      <td>
-                        <strong>${Number(product.price || 0).toFixed(2)}</strong>
-                        {product.salePrice && (
-                          <span className="sale-strike">
-                            ${Number(product.salePrice).toFixed(2)}
-                          </span>
-                        )}
+                      <td data-label="Category">{product.category || "Uncategorized"}</td>
+                      <td data-label="Price" className="is-num">
+                        <div className="console-cell__stack">
+                          <strong>${Number(product.price || 0).toFixed(2)}</strong>
+                          {product.salePrice && (
+                            <span className="console-muted">Sale ${Number(product.salePrice).toFixed(2)}</span>
+                          )}
+                        </div>
                       </td>
-                      <td>
-                        <span
-                          className={`stock-indicator ${
-                            Number(product.stock) <= 5 ? "low" : "ok"
-                          }`}
-                        >
-                          {product.stock ?? 10} units
+                      <td data-label="Stock" className="is-num">
+                        <span className={`admin-stock admin-stock--${stockStatus}`}>
+                          {stockStatus !== "in" && <Icon name="alertTriangle" />}
+                          {product.stock ?? 0} {Number(product.stock) === 1 ? "unit" : "units"}
                         </span>
                       </td>
-                      <td>
-                        <span
-                          className={`status-badge ${
-                            product.inStock !== false && Number(product.stock) > 0
-                              ? "delivered"
-                              : "cancelled"
-                          }`}
-                        >
-                          {product.inStock !== false && Number(product.stock) > 0
-                            ? "In Stock"
-                            : "Out of Stock"}
-                        </span>
+                      <td data-label="Status">
+                        <StatusBadge status={stockStatus} label={badge.label} tone={badge.tone} />
                       </td>
-                      <td>
-                        <div className="table-actions-cell">
+                      <td data-label="" className="is-right">
+                        <div className="console-actions">
                           <Link
-                            className="btn-action-edit"
+                            className="ui-btn ui-btn--secondary ui-btn--sm"
                             to={`/admin/products/edit/${prodId}`}
                           >
+                            <Icon name="edit" />
                             Edit
                           </Link>
                           <button
                             type="button"
-                            className="btn-action-delete"
-                            onClick={() => setDeleteTarget(product)}
+                            className="ui-btn ui-btn--danger-soft ui-btn--sm ui-btn--icon"
+                            onClick={() => {
+                              setDeleteError("");
+                              setDeleteTarget(product);
+                            }}
+                            aria-label={`Delete ${product.name}`}
+                            title="Delete"
                           >
-                            Delete
+                            <Icon name="trash" />
                           </button>
                         </div>
                       </td>
@@ -242,42 +308,59 @@ function AdminProducts() {
               </tbody>
             </table>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Delete Confirmation Modal */}
-        {deleteTarget && (
-          <div className="modal-backdrop">
-            <div className="modal-card">
-              <h3>Delete Product</h3>
-              <p>
-                Are you sure you want to delete <strong>"{deleteTarget.name}"</strong>?
-                This action will remove it from the store catalog permanently.
-              </p>
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="dashboard-outline-btn"
-                  onClick={() => setDeleteTarget(null)}
-                  disabled={deleting}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="dashboard-logout-btn"
-                  onClick={confirmDelete}
-                  disabled={deleting}
-                >
-                  {deleting ? "Deleting..." : "Yes, Delete Product"}
-                </button>
-              </div>
+      {/* Delete confirmation */}
+      {deleteTarget && (
+        <Modal
+          title="Delete product"
+          subtitle="This action cannot be undone."
+          icon="trash"
+          locked={deleting}
+          onClose={() => setDeleteTarget(null)}
+          footer={
+            <>
+              <button
+                type="button"
+                className="ui-btn ui-btn--secondary"
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="ui-btn ui-btn--danger"
+                onClick={confirmDelete}
+                disabled={deleting}
+              >
+                {deleting ? (
+                  <>
+                    <span className="ui-spinner" aria-hidden="true"></span>
+                    Deleting...
+                  </>
+                ) : (
+                  "Yes, Delete Product"
+                )}
+              </button>
+            </>
+          }
+        >
+          {deleteError && (
+            <div className="ui-alert ui-alert--error" role="alert">
+              <Icon name="alertCircle" />
+              <span>{deleteError}</span>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+          <p>
+            Are you sure you want to delete <strong>"{deleteTarget.name}"</strong>? It will be removed from the
+            store catalog permanently.
+          </p>
+        </Modal>
+      )}
     </div>
   );
 }
 
 export default AdminProducts;
-

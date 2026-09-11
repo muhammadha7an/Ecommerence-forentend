@@ -1,8 +1,12 @@
-import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import CategoryCard from '../components/CategoryCard';
+import NewsletterForm from '../components/NewsletterForm';
+import Icon from '../components/Icon';
+import { getImageUrl } from '../services/api';
+import { useFreeShippingThreshold } from '../hooks/useShipping';
+import { freeShippingPhrase, getEffectivePrice } from '../utils/commerce';
 
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay, A11y } from 'swiper/modules';
@@ -10,7 +14,7 @@ import { Navigation, Pagination, Autoplay, A11y } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
- 
+import '../style/pages/home.css';
 
 const testimonials = [
   {
@@ -43,271 +47,306 @@ const instagramPosts = [
   'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&q=80&w=400',
 ];
 
+const promises = [
+  { icon: 'truck', title: 'Free Shipping', text: 'dynamic' },
+  { icon: 'leaf', title: 'Sustainable Quality', text: 'Ethically sourced materials' },
+  { icon: 'rotateCcw', title: '30-Day Guarantee', text: 'Hassle-free exchanges' },
+  { icon: 'lock', title: 'Secure Checkout', text: 'Payments protected by Stripe' },
+];
+
 export default function Home() {
   const products = useSelector((state) => state.products.items) || [];
   const categories = useSelector((state) => state.categories.items) || [];
-  const [email, setEmail] = useState('');
-  const [subscribed, setSubscribed] = useState(false);
+  const freeShippingThreshold = useFreeShippingThreshold();
+  const shippingPhrase = freeShippingPhrase(freeShippingThreshold);
 
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (email) {
-      setSubscribed(true);
-      setEmail('');
-      setTimeout(() => setSubscribed(false), 4000);
-    }
-  };
+  // A real catalog product is pinned to the hero image as a shoppable tag
+  const heroProduct = products.find((product) => product.isFeatured) || products[0] || null;
+  const heroProductId = heroProduct ? heroProduct.id || heroProduct._id || heroProduct.legacyId : null;
 
   return (
     <div className="home-page">
-      {/* 1. HERO SECTION */}
-      <section className="hero-section">
-        <div className="hero-container">
-          <div className="hero-text">
-            <span className="eyebrow">A considered collection</span>
-            <h1>Simple things, thoughtfully chosen.</h1>
-            <p>Explore useful, beautifully crafted pieces designed to fit naturally into everyday living.</p>
-            <div className="hero-cta-group">
-              <Link className="btn btn-primary" to="/shop">
+      {/* 1. HERO */}
+      <section className="home-hero">
+        <div className="home-hero__inner">
+          <div className="home-hero__copy">
+            <p className="home-hero__kicker">A considered collection</p>
+            <h1 className="home-hero__title">Simple things, thoughtfully chosen.</h1>
+            <p className="home-hero__text">
+              Explore useful, beautifully crafted pieces designed to fit naturally into everyday living.
+            </p>
+            <div className="home-hero__actions">
+              <Link className="ui-btn ui-btn--lg" to="/shop">
                 Browse Shop
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                  <polyline points="12 5 19 12 12 19"></polyline>
-                </svg>
+                <Icon name="arrowRight" />
               </Link>
-              <a className="btn btn-outline" href="#categories">
+              <a className="ui-btn ui-btn--secondary ui-btn--lg" href="#categories">
                 Explore Categories
               </a>
             </div>
+            <dl className="home-hero__facts">
+              <div>
+                <dt>{products.length}</dt>
+                <dd>Products in the shop</dd>
+              </div>
+              <div>
+                <dt>{categories.length}</dt>
+                <dd>Curated categories</dd>
+              </div>
+              {freeShippingThreshold !== null && (
+                <div>
+                  <dt>{freeShippingThreshold === 0 ? 'Free' : `$${freeShippingThreshold}+`}</dt>
+                  <dd>{freeShippingThreshold === 0 ? 'Shipping on every order' : 'Orders ship free'}</dd>
+                </div>
+              )}
+            </dl>
           </div>
-          <div className="hero-visual">
-            <img 
-              src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&q=80&w=1000" 
-              alt="Aura Living Space" 
-              className="hero-main-img"
+
+          <div className="home-hero__visual">
+            <img
+              src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&q=80&w=1100"
+              alt="A calm living space styled with Aura pieces"
+              className="home-hero__img"
             />
+
+            {heroProduct && (
+              <Link to={`/product/${heroProductId}`} className="home-hero__tag">
+                <img src={getImageUrl(heroProduct.image)} alt="" />
+                <span className="home-hero__tag-copy">
+                  <span className="home-hero__tag-name">{heroProduct.name}</span>
+                  <span className="home-hero__tag-price">${getEffectivePrice(heroProduct).toFixed(2)}</span>
+                </span>
+                <span className="home-hero__tag-go" aria-hidden="true">
+                  <Icon name="arrowRight" />
+                </span>
+              </Link>
+            )}
           </div>
         </div>
       </section>
 
-      {/* 2. TRUST BADGES STRIP */}
-      <section className="trust-strip">
-        <div className="trust-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="1" y="3" width="15" height="13"></rect>
-            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-            <circle cx="5.5" cy="18.5" r="2.5"></circle>
-            <circle cx="18.5" cy="18.5" r="2.5"></circle>
-          </svg>
-          <div>
-            <h4>Free Shipping</h4>
-            <p>On orders over $75</p>
-          </div>
-        </div>
-        <div className="trust-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
-          <div>
-            <h4>Sustainable Quality</h4>
-            <p>Ethically sourced materials</p>
-          </div>
-        </div>
-        <div className="trust-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="23 4 23 10 17 10"></polyline>
-            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-          </svg>
-          <div>
-            <h4>30-Day Guarantee</h4>
-            <p>Hassle-free exchanges</p>
-          </div>
+      {/* 2. SERVICE PROMISES */}
+      <section className="home-promises" aria-label="Store promises">
+        <div className="home-promises__inner">
+          {promises.map((item) => (
+            <div key={item.title} className="home-promise">
+              <span className="home-promise__icon">
+                <Icon name={item.icon} />
+              </span>
+              <div>
+                <h4>{item.title}</h4>
+                <p>
+                  {item.text === 'dynamic'
+                    ? shippingPhrase.charAt(0).toUpperCase() + shippingPhrase.slice(1)
+                    : item.text}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* 3. FEATURED CATEGORIES */}
-      <section id="categories" className="content-section">
-        <div className="section-head">
-          <div>
-            <span className="section-tag">Curated Spaces</span>
-            <h2>Featured Categories</h2>
+      <section id="categories" className="home-section">
+        <div className="home-section__inner">
+          <div className="home-section__head">
+            <div>
+              <h2 className="home-section__title">Shop by category</h2>
+              <p className="home-section__text">Browse the collection by room, ritual and use.</p>
+            </div>
+            <Link to="/shop" className="ui-link">
+              View all
+              <Icon name="arrowRight" />
+            </Link>
           </div>
-          <Link to="/shop" className="link-arrow">View All</Link>
-        </div>
 
-
-        <Swiper
-          modules={[ Autoplay, A11y]}
-          navigation
-          pagination={{ clickable: true }}
-          grabCursor={true}
-          loop={true}
-          autoplay={{
-            delay: 2000,
-            disableOnInteraction: false,
-            pauseOnMouseEnter: true,
-          }}
-          spaceBetween={16}
-          slidesPerView={1.2}
-          breakpoints={{
-            480: { slidesPerView: 1, spaceBetween: 16 },
-            768: { slidesPerView: 2, spaceBetween: 20 },
-            1024: { slidesPerView: 3, spaceBetween: 24 },
-          }}
-          className="featured-category-slider"
-        >
+          <Swiper
+            modules={[Navigation, Pagination, Autoplay, A11y]}
+            navigation
+            pagination={{ clickable: true }}
+            grabCursor={true}
+            loop={categories.length > 3}
+            autoplay={{
+              delay: 3500,
+              disableOnInteraction: false,
+              pauseOnMouseEnter: true,
+            }}
+            spaceBetween={16}
+            slidesPerView={1.15}
+            breakpoints={{
+              480: { slidesPerView: 1.6, spaceBetween: 16 },
+              768: { slidesPerView: 2.3, spaceBetween: 20 },
+              1024: { slidesPerView: 3, spaceBetween: 24 },
+            }}
+            className="aura-swiper featured-category-slider"
+          >
             {categories.map((category) => (
-            <SwiperSlide key={category.id}>
-              <CategoryCard category={category} />
-            </SwiperSlide>
-          ))} 
-        </Swiper>
-
-        
+              <SwiperSlide key={category.id || category._id || category.name}>
+                <CategoryCard category={category} />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
       </section>
 
-      {/* 4. BRAND STORY SECTION */}
-      <section className="brand-story-section">
-        <div className="brand-story-container">
-          <div className="brand-story-image">
-            <img 
-              src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&q=80&w=800" 
-              alt="Craftsmanship" 
+      {/* 4. FEATURED PRODUCTS */}
+      <section className="home-section home-section--tinted">
+        <div className="home-section__inner">
+          <div className="home-section__head">
+            <div>
+              <h2 className="home-section__title">Featured products</h2>
+              <p className="home-section__text">Handpicked pieces our customers keep coming back for.</p>
+            </div>
+            <Link to="/shop" className="ui-link">
+              Shop all
+              <Icon name="arrowRight" />
+            </Link>
+          </div>
+
+          <Swiper
+            modules={[Navigation, Pagination, Autoplay, A11y]}
+            navigation
+            pagination={{ clickable: true }}
+            grabCursor={true}
+            autoplay={{
+              delay: 4000,
+              disableOnInteraction: false,
+              pauseOnMouseEnter: true,
+            }}
+            spaceBetween={16}
+            slidesPerView={1.3}
+            breakpoints={{
+              480: { slidesPerView: 2, spaceBetween: 16 },
+              768: { slidesPerView: 3, spaceBetween: 20 },
+              1024: { slidesPerView: 4, spaceBetween: 24 },
+            }}
+            className="aura-swiper featured-products-slider"
+          >
+            {products.slice(0, 8).map((product) => (
+              <SwiperSlide key={product.id || product._id}>
+                <ProductCard product={product} />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
+      </section>
+
+      {/* 5. BRAND STORY */}
+      <section className="home-story">
+        <div className="home-story__inner">
+          <div className="home-story__media">
+            <img
+              src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&q=80&w=900"
+              alt="Hand-finished ceramics in natural light"
+              loading="lazy"
             />
           </div>
-          <div className="brand-story-content">
-            <span className="section-tag">Our Philosophy</span>
+          <div className="home-story__copy">
             <h2>Designed for slow, intentional living.</h2>
             <p>
-              At Aura, we believe that everyday objects should bring peace and purpose to your living space. 
-              Each product in our collection is crafted with sustainable materials and timeless simplicity.
+              At Aura, we believe everyday objects should bring calm and purpose to your space.
+              Each product in our collection is made with sustainable materials and a timeless,
+              simple form — so it earns its place for years, not seasons.
             </p>
-            <Link to="/about" className="btn btn-outline">
+            <ul className="home-story__list">
+              <li>
+                <Icon name="check" />
+                Natural and recycled materials first
+              </li>
+              <li>
+                <Icon name="check" />
+                Small makers and fair production
+              </li>
+              <li>
+                <Icon name="check" />
+                Plastic-free, recyclable packaging
+              </li>
+            </ul>
+            <Link to="/about" className="ui-btn ui-btn--secondary">
               Read Our Story
             </Link>
           </div>
         </div>
       </section>
 
-      {/* 5. FEATURED PRODUCTS SLIDER */}
-      <section className="content-section bg-soft">
-        <div className="section-head">
-          <div>
-            <span className="section-tag">Handpicked Collection</span>
-            <h2>Featured Products</h2>
-          </div>
-          <Link to="/shop" className="link-arrow">Shop All</Link>
-        </div>
-
-        <Swiper
-          modules={[Navigation, Pagination, Autoplay, A11y]}
-          navigation
-          pagination={{ clickable: true }}
-          grabCursor={true}
-          autoplay={{
-            delay: 4000,
-            disableOnInteraction: false,
-            pauseOnMouseEnter: true,
-          }}
-          spaceBetween={16}
-          slidesPerView={1.2}
-          breakpoints={{
-            480: { slidesPerView: 2, spaceBetween: 16 },
-            768: { slidesPerView: 3, spaceBetween: 20 },
-            1024: { slidesPerView: 4, spaceBetween: 24 },
-          }}
-          className="featured-products-slider"
-        >
-          {products.slice(0, 8).map((product) => (
-            <SwiperSlide key={product.id}>
-              <ProductCard product={product} />
-            </SwiperSlide>
-          ))}
-        </Swiper>
-
-
-      </section>
-
       {/* 6. CUSTOMER REVIEWS */}
-      <section className="content-section">
-        <div className="section-head text-center">
-          <span className="section-tag">Customer Love</span>
-          <h2>Loved by Minimalists Everywhere</h2>
-        </div>
-
-        <div className="reviews-grid">
-          {testimonials.map((item) => (
-            <div key={item.id} className="review-card">
-              <div className="stars">
-                {[...Array(item.rating)].map((_, i) => (
-                  <svg key={i} viewBox="0 0 24 24" fill="#ad4b2f" width="18" height="18">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                  </svg>
-                ))}
-              </div>
-              <p className="review-comment">"{item.comment}"</p>
-              <div className="review-author">
-                <strong>{item.name}</strong>
-                <span>{item.role}</span>
-              </div>
+      <section className="home-section">
+        <div className="home-section__inner">
+          <div className="home-section__head">
+            <div>
+              <h2 className="home-section__title">Loved by minimalists everywhere</h2>
+              <p className="home-section__text">What customers say after living with our pieces.</p>
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 7. INSTAGRAM LIFESTYLE GALLERY */}
-      <section className="instagram-section">
-        <div className="section-head">
-          <div>
-            <span className="section-tag">#AuraLiving</span>
-            <h2>Follow Us on Instagram</h2>
           </div>
-          <a href="https://instagram.com" target="_blank" rel="noreferrer" className="link-arrow">
-            @aura.home
-          </a>
-        </div>
 
-        <div className="gallery-grid">
-          {instagramPosts.map((imgUrl, index) => (
-            <div key={index} className="gallery-item">
-              <img src={imgUrl} alt="Aura Community" />
-              <div className="gallery-overlay">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="24" height="24">
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                </svg>
-              </div>
-            </div>
-          ))}
+          <div className="home-reviews">
+            {testimonials.map((item) => (
+              <figure key={item.id} className="home-review">
+                <div className="home-review__stars" aria-label={`${item.rating} out of 5 stars`}>
+                  {[...Array(item.rating)].map((_, i) => (
+                    <Icon key={i} name="star" filled />
+                  ))}
+                </div>
+                <blockquote>“{item.comment}”</blockquote>
+                <figcaption>
+                  <span className="home-review__avatar">{item.name.charAt(0)}</span>
+                  <span>
+                    <strong>{item.name}</strong>
+                    <small>{item.role}</small>
+                  </span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* 8. NEWSLETTER / PROMO BANNER */}
-      <section className="promo-section">
-        <div className="promo-box">
-          <div className="promo-text">
-            <span className="eyebrow-light">Join The Community</span>
-            <h2>Get 15% off your first order</h2>
-            <p>Subscribe for exclusive updates, early access to new releases, and styling tips.</p>
+      {/* 7. INSTAGRAM GALLERY */}
+      <section className="home-section home-section--flush-top">
+        <div className="home-section__inner">
+          <div className="home-section__head">
+            <div>
+              <h2 className="home-section__title">#AuraLiving</h2>
+              <p className="home-section__text">Real homes, styled by our community.</p>
+            </div>
+            <a href="https://instagram.com" target="_blank" rel="noreferrer" className="ui-link">
+              <Icon name="instagram" />
+              @aura.home
+            </a>
+          </div>
 
-            {subscribed ? (
-              <div className="newsletter-success">
-                ✓ Thank you for subscribing! Check your inbox soon.
-              </div>
-            ) : (
-              <form className="promo-newsletter-form" onSubmit={handleSubscribe}>
-                <input 
-                  type="email" 
-                  placeholder="Enter your email address..." 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required 
-                />
-                <button type="submit" className="btn btn-primary">
-                  Subscribe
-                </button>
-              </form>
-            )}
+          <div className="home-gallery">
+            {instagramPosts.map((imgUrl, index) => (
+              <a
+                key={index}
+                href="https://instagram.com"
+                target="_blank"
+                rel="noreferrer"
+                className="home-gallery__item"
+                aria-label="Open Aura on Instagram"
+              >
+                <img src={imgUrl} alt="" loading="lazy" />
+                <span className="home-gallery__overlay">
+                  <Icon name="instagram" />
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 8. NEWSLETTER */}
+      <section className="home-newsletter" id="newsletter">
+        <div className="home-newsletter__inner">
+          <div className="home-newsletter__copy">
+            <span className="home-newsletter__icon">
+              <Icon name="mail" />
+            </span>
+            <h2>Get 15% off your first order</h2>
+            <p>Subscribe for early access to new releases, restocks and styling notes.</p>
+          </div>
+          <div className="home-newsletter__form">
+            <NewsletterForm variant="feature" source="home" />
           </div>
         </div>
       </section>

@@ -26,7 +26,12 @@ function AdminRoute({ children }) {
   }
 
   if (state.loading) {
-    return <div className="dashboard-page"><div className="dashboard-panel">Checking administrator access...</div></div>;
+    return (
+      <div className="ui-loading ui-loading--screen">
+        <span className="ui-spinner ui-spinner--lg" aria-hidden="true"></span>
+        <p>Checking administrator access...</p>
+      </div>
+    );
   }
 
   if (!state.allowed) {

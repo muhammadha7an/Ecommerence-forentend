@@ -1,16 +1,8 @@
-import './style/App.css'
-import './style/header.css'
-import './style/footer.css'
-import './style/Home.css'
-import './style/shop.css'
-import './style/Wishlist.css'
-import './style/cart.css'
-import './style/about.css'
-import './style/Contact.css'
-import './style/checkout.css'
-import './style/success.css'
-import './style/account.css'
-import './style/dashboard.css'
+// Global design system (tokens → base → shared UI primitives).
+// Page and component styles are imported by the files that use them.
+import './style/global/tokens.css'
+import './style/global/base.css'
+import './style/global/ui.css'
 
 import { useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -21,7 +13,8 @@ import DashboardLayout from './components/DashboardLayout.jsx'
 import AdminDashboardLayout from './components/AdminDashboardLayout.jsx'
 import AdminRoute from './components/AdminRoute.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
-import { hydrateCart } from './redux/slices/cartSlice'
+import { hydrateCart, syncCartWithCatalog } from './redux/slices/cartSlice'
+import { fetchStoreSettings } from './redux/slices/settingsSlice'
 import { hydrateWishlist } from './redux/slices/wishlistSlice'
 import { fetchProducts } from './redux/slices/productsSlice'
 import { fetchCategories } from './redux/slices/categoriesSlice'
@@ -50,6 +43,9 @@ import AdminOrders from './pages/AdminOrders.jsx'
 import AdminProducts from './pages/AdminProducts.jsx'
 import AdminProductForm from './pages/AdminProductForm.jsx'
 import AdminCategories from './pages/AdminCategories.jsx'
+import AdminSubscribers from './pages/AdminSubscribers.jsx'
+import AdminContactMessages from './pages/AdminContactMessages.jsx'
+import AdminSettings from './pages/AdminSettings.jsx'
 
 function UserDataPersistence() {
   const dispatch = useDispatch()
@@ -63,10 +59,14 @@ function UserDataPersistence() {
   const cartKey = `cart:${identity}`
   const wishlistKey = `wishlist:${identity}`
 
-  // Fetch live products and categories from MongoDB on initial mount
+  const catalog = useSelector((state) => state.products.items)
+  const catalogLoaded = useSelector((state) => state.products.loadedFromServer)
+
+  // Fetch live products, categories and store settings (shipping rules) on initial mount
   useEffect(() => {
     dispatch(fetchProducts())
     dispatch(fetchCategories())
+    dispatch(fetchStoreSettings())
   }, [dispatch])
 
   useEffect(() => {
@@ -101,6 +101,11 @@ function UserDataPersistence() {
     localStorage.setItem(cartKey, JSON.stringify(cartItems))
     localStorage.setItem(wishlistKey, JSON.stringify(wishlistItems))
   }, [cartItems, wishlistItems, cartKey, wishlistKey])
+
+  // Keep cart prices and stock in line with the live catalog (only once real data has loaded)
+  useEffect(() => {
+    if (catalogLoaded) dispatch(syncCartWithCatalog(catalog))
+  }, [catalog, catalogLoaded, cartItems.length, location.pathname, dispatch])
 
   return null
 }
@@ -143,6 +148,9 @@ function App() {
           <Route path="/admin/products/add" element={<AdminProductForm />} />
           <Route path="/admin/products/edit/:id" element={<AdminProductForm />} />
           <Route path="/admin/categories" element={<AdminCategories />} />
+          <Route path="/admin/subscribers" element={<AdminSubscribers />} />
+          <Route path="/admin/contact-messages" element={<AdminContactMessages />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
         </Route>
       </Routes>
     </BrowserRouter>

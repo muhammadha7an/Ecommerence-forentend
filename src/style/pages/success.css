@@ -1,0 +1,221 @@
+/* ==========================================================================
+   ORDER SUCCESS
+   ========================================================================== */
+
+.success-page {
+  padding: clamp(2rem, 6vw, 4.5rem) var(--gutter) var(--section-y);
+  background: var(--c-surface-alt);
+}
+
+.success-card {
+  display: flex;
+  max-width: 720px;
+  margin: 0 auto;
+  flex-direction: column;
+  gap: var(--sp-8);
+  padding: clamp(1.5rem, 4vw, 3rem);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  background: var(--c-white);
+}
+
+.success-card--state {
+  align-items: center;
+  gap: var(--sp-4);
+  text-align: center;
+}
+
+.success-card--state h1 {
+  font-family: var(--font-serif);
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-medium);
+}
+
+.success-card--state p {
+  color: var(--c-text-muted);
+}
+
+.success-error {
+  max-width: 48ch;
+}
+
+.success-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  text-align: center;
+}
+
+.success-hero h1 {
+  font-family: var(--font-serif);
+  font-size: var(--fs-3xl);
+  font-weight: var(--fw-medium);
+  letter-spacing: -0.02em;
+}
+
+.success-hero p {
+  max-width: 52ch;
+  color: var(--c-text-muted);
+}
+
+.success-hero p strong {
+  color: var(--c-ink);
+}
+
+.success-badge {
+  display: grid;
+  width: 68px;
+  height: 68px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--c-success-bg);
+  color: var(--c-success);
+  animation: success-pop var(--t-slow) var(--ease);
+}
+
+.success-badge .ui-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.success-badge--error {
+  background: var(--c-danger-bg);
+  color: var(--c-danger);
+}
+
+@keyframes success-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+.success-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  background: var(--c-line);
+  overflow: hidden;
+}
+
+.success-meta div {
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--c-white);
+}
+
+.success-meta dt {
+  color: var(--c-text-subtle);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+}
+
+.success-meta dd {
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: var(--c-ink);
+  font-weight: var(--fw-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.success-items h2 {
+  margin-bottom: var(--sp-3);
+  font-size: var(--fs-lg);
+}
+
+.success-items ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.success-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4) 0;
+  border-bottom: 1px solid var(--c-line);
+}
+
+.success-item__icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: var(--r-sm);
+  background: var(--c-sage-soft);
+  color: var(--c-sage-deep);
+}
+
+.success-item__icon .ui-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.success-item div {
+  min-width: 0;
+  flex: 1;
+}
+
+.success-item h3 {
+  font-size: var(--fs-base);
+}
+
+.success-item p {
+  color: var(--c-text-muted);
+  font-size: var(--fs-sm);
+}
+
+.success-item strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.success-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding-top: var(--sp-4);
+  color: var(--c-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.success-breakdown div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.success-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--sp-4);
+  font-size: var(--fs-lg);
+}
+
+.success-total strong {
+  font-size: var(--fs-xl);
+  font-variant-numeric: tabular-nums;
+}
+
+.success-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
+}
+
+@media (max-width: 560px) {
+  .success-meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .success-actions .ui-btn {
+    flex: 1 1 100%;
+  }
+}

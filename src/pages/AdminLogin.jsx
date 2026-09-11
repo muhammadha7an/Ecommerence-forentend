@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import authService from "../services/authService";
-import styles from "../style/AdminLogin.module.css";
+import AuthShell from "../components/AuthShell";
+import PasswordInput from "../components/PasswordInput";
+import Icon from "../components/Icon";
 
 function AdminLogin() {
   const navigate = useNavigate();
@@ -31,40 +33,53 @@ function AdminLogin() {
   };
 
   return (
-    <div className={styles.pageContainer}>
-      <form className={styles.loginCard} onSubmit={submit}>
-        <span className={styles.welcomeBadge}>Aura Administration</span>
-        <h1 className={styles.title}>Admin Sign In</h1>
-        <p className={styles.description}>
-          Use your administrator account to continue.
+    <AuthShell
+      variant="admin"
+      title="Admin sign in"
+      subtitle="Use your administrator account to continue."
+      icon="shieldCheck"
+      footer={
+        <p>
+          Not an administrator?{" "}
+          <Link to="/login" className="ui-link">
+            Customer sign in
+          </Link>
         </p>
+      }
+    >
+      {error && (
+        <div className="ui-alert ui-alert--error" role="alert">
+          <Icon name="alertCircle" />
+          <span>{error}</span>
+        </div>
+      )}
 
-        {error && <div className={styles.errorMessage}>{error}</div>}
-
-        <div className={styles.fieldGroup}>
-          <label htmlFor="username" className={styles.label}>
+      <form className="auth-form" onSubmit={submit}>
+        <div className="ui-field">
+          <label htmlFor="username" className="ui-label">
             Username
           </label>
-          <input
-            id="username"
-            className={styles.input}
-            value={form.username}
-            onChange={(event) =>
-              setForm({ ...form, username: event.target.value })
-            }
-            required
-            autoComplete="username"
-          />
+          <div className="ui-input-icon">
+            <Icon name="user" />
+            <input
+              id="username"
+              className="ui-input"
+              value={form.username}
+              onChange={(event) =>
+                setForm({ ...form, username: event.target.value })
+              }
+              required
+              autoComplete="username"
+            />
+          </div>
         </div>
 
-        <div className={styles.fieldGroup}>
-          <label htmlFor="password" className={styles.label}>
+        <div className="ui-field">
+          <label htmlFor="password" className="ui-label">
             Password
           </label>
-          <input
+          <PasswordInput
             id="password"
-            type="password"
-            className={styles.input}
             value={form.password}
             onChange={(event) =>
               setForm({ ...form, password: event.target.value })
@@ -74,15 +89,18 @@ function AdminLogin() {
           />
         </div>
 
-        <button type="submit" className={styles.submitBtn} disabled={loading}>
-          {loading ? "Signing in..." : "Sign in"}
+        <button type="submit" className="ui-btn ui-btn--lg ui-btn--block" disabled={loading}>
+          {loading ? (
+            <>
+              <span className="ui-spinner" aria-hidden="true" />
+              Signing in...
+            </>
+          ) : (
+            "Sign in"
+          )}
         </button>
-
-        <Link to="/login" className={styles.switchLink}>
-          Customer sign in
-        </Link>
       </form>
-    </div>
+    </AuthShell>
   );
 }
 

@@ -2,6 +2,16 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import authService from "../services/authService";
 import { getImageUrl } from "../services/api";
+import Icon from "../components/Icon";
+import StatusBadge from "../components/StatusBadge";
+import EmptyState from "../components/EmptyState";
+
+const progressSteps = [
+  { key: "pending", label: "Placed", icon: "receipt" },
+  { key: "processing", label: "Processing", icon: "package" },
+  { key: "shipped", label: "Shipped", icon: "truck" },
+  { key: "delivered", label: "Delivered", icon: "home" },
+];
 
 const money = (amount, currency = "usd") =>
   new Intl.NumberFormat("en-US", {
@@ -49,9 +59,9 @@ function UserOrderDetails() {
 
   if (loading) {
     return (
-      <div className="dashboard-page">
-        <div className="dashboard-loading">
-          <div className="dashboard-spinner"></div>
+      <div className="console-page">
+        <div className="ui-loading">
+          <span className="ui-spinner ui-spinner--lg" aria-hidden="true"></span>
           <p>Loading order invoice...</p>
         </div>
       </div>
@@ -60,23 +70,24 @@ function UserOrderDetails() {
 
   if (error || !order) {
     return (
-      <div className="dashboard-page">
-        <div className="dashboard-container">
-          <div className="dashboard-panel dashboard-error">
-            <h2>Unable to load order</h2>
-            <p>{error || "Order not found or access denied."}</p>
-            <Link className="dashboard-outline-btn" to="/dashboard/orders">
-              Back to My Orders
-            </Link>
-          </div>
-        </div>
+      <div className="console-page">
+        <EmptyState
+          icon="alertTriangle"
+          title="Unable to load order"
+          text={error || "Order not found or access denied."}
+        >
+          <Link className="ui-btn ui-btn--secondary" to="/dashboard/orders">
+            <Icon name="arrowLeft" />
+            Back to My Orders
+          </Link>
+        </EmptyState>
       </div>
     );
   }
 
-  const statusClass = (order.orderStatus || "pending")
-    .toLowerCase()
-    .replace(/\s+/g, "-");
+  const statusKey = (order.orderStatus || "pending").toLowerCase();
+  const isCancelled = statusKey === "cancelled";
+  const currentStep = isCancelled ? -1 : progressSteps.findIndex((step) => step.key === statusKey);
 
   const subtotal = order.items?.reduce(
     (acc, item) => acc + (item.price || 0) * (item.quantity || 1),
@@ -84,163 +95,200 @@ function UserOrderDetails() {
   ) || 0;
 
   return (
-    <div className="dashboard-page">
-      <div className="dashboard-container">
-        {/* Header */}
-        <div className="dashboard-header">
-          <div>
-            <span className="dashboard-welcome">Order Invoice</span>
-            <h1>Order #{String(order._id).slice(-8)}</h1>
-            <p>Placed on {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}</p>
-          </div>
-
-          <div className="dashboard-actions">
-            <Link className="dashboard-outline-btn" to="/dashboard/orders">
-              ← Back to My Orders
-            </Link>
-          </div>
+    <div className="console-page">
+      {/* Header */}
+      <div className="console-head">
+        <div>
+          <span className="console-head__eyebrow">Order invoice</span>
+          <h1>Order #{String(order._id).slice(-8).toUpperCase()}</h1>
+          <p>
+            Placed on {new Date(order.createdAt).toLocaleDateString()} at{" "}
+            {new Date(order.createdAt).toLocaleTimeString()}
+          </p>
         </div>
 
-        {/* Order Status Banner */}
-        <div className="order-details-status-strip">
-          <div className="status-strip-col">
-            <span className="strip-label">Order Status</span>
-            <span className={`status-badge ${statusClass}`}>
-              {order.orderStatus || "Processing"}
-            </span>
-          </div>
-
-          <div className="status-strip-col">
-            <span className="strip-label">Payment Status</span>
-            <span className={`payment-pill ${order.paymentStatus || "unpaid"}`}>
-              {order.paymentStatus || "unpaid"}
-            </span>
-          </div>
-
-          <div className="status-strip-col">
-            <span className="strip-label">Stripe Session</span>
-            <span className="strip-code">{order.stripeSessionId ? `#${order.stripeSessionId.slice(-10)}` : "Direct Checkout"}</span>
-          </div>
+        <div className="console-head__actions">
+          <Link className="ui-btn ui-btn--secondary" to="/dashboard/orders">
+            <Icon name="arrowLeft" />
+            Back to My Orders
+          </Link>
         </div>
+      </div>
 
-        <div className="order-details-layout">
-          {/* Left Column: Products in order */}
-          <div className="order-details-main">
-            <div className="dashboard-panel">
-              <h2 className="panel-title">Items Ordered ({order.items?.length || 0})</h2>
+      {/* Status strip */}
+      <div className="console-status-strip">
+        <div>
+          <span className="console-muted">Order status</span>
+          <StatusBadge status={order.orderStatus || "processing"} />
+        </div>
+        <div>
+          <span className="console-muted">Payment status</span>
+          <StatusBadge status={order.paymentStatus || "unpaid"} />
+        </div>
+        <div>
+          <span className="console-muted">Stripe session</span>
+          <span className="console-mono">
+            {order.stripeSessionId ? `#${order.stripeSessionId.slice(-10)}` : "Direct Checkout"}
+          </span>
+        </div>
+      </div>
 
-              <div className="order-items-list">
-                {order.items?.map((item, index) => {
-                  const itemImg = getImageUrl(item.image);
-                  const lineTotal = (item.price || 0) * (item.quantity || 1);
+      {/* Progress */}
+      <section className="console-panel">
+        {isCancelled ? (
+          <div className="console-panel__body">
+            <div className="ui-alert ui-alert--error">
+              <Icon name="alertCircle" />
+              <span>This order was cancelled. Contact support if you have questions about a refund.</span>
+            </div>
+          </div>
+        ) : (
+          <ol className="console-progress" aria-label="Order progress">
+            {progressSteps.map((step, index) => {
+              const done = currentStep >= index;
+              return (
+                <li
+                  key={step.key}
+                  className={`${done ? "is-done" : ""} ${currentStep === index ? "is-current" : ""}`.trim()}
+                  aria-current={currentStep === index ? "step" : undefined}
+                >
+                  <span className="console-progress__dot">
+                    <Icon name={done ? "check" : step.icon} />
+                  </span>
+                  {step.label}
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </section>
 
-                  return (
-                    <div className="order-item-row" key={`${item.id || item.name}-${index}`}>
-                      <div className="order-item-thumb">
-                        <img
-                          src={itemImg}
-                          alt={item.name}
-                          onError={(e) => {
-                            e.target.src = "https://images.unsplash.com/photo-1544816155-12df9643f363?w=200&q=80";
-                          }}
-                        />
-                      </div>
+      <div className="console-split">
+        {/* Items */}
+        <section className="console-panel">
+          <div className="console-panel__head">
+            <h2>Items ordered ({order.items?.length || 0})</h2>
+          </div>
 
-                      <div className="order-item-details">
-                        <h3 className="order-item-name">{item.name}</h3>
-                        <p className="order-item-pricing">
-                          ${(item.price || 0).toFixed(2)} × {item.quantity || 1}
-                        </p>
-                      </div>
+          <div className="console-panel__body">
+            <ul className="console-line-items">
+              {order.items?.map((item, index) => {
+                const itemImg = getImageUrl(item.image);
+                const lineTotal = (item.price || 0) * (item.quantity || 1);
 
-                      <div className="order-item-total">
-                        <strong>${lineTotal.toFixed(2)}</strong>
-                      </div>
+                return (
+                  <li className="console-line-item" key={`${item.id || item.name}-${index}`}>
+                    <img
+                      className="console-thumb"
+                      src={itemImg}
+                      alt={item.name}
+                      onError={(e) => {
+                        e.target.src = "https://images.unsplash.com/photo-1544816155-12df9643f363?w=200&q=80";
+                      }}
+                    />
+
+                    <div className="console-line-item__info">
+                      <strong>{item.name}</strong>
+                      <span className="console-muted">
+                        ${(item.price || 0).toFixed(2)} × {item.quantity || 1}
+                      </span>
                     </div>
-                  );
-                })}
-              </div>
 
-              {/* Cost summary table */}
-              <div className="order-cost-breakdown">
-                <div className="cost-row">
-                  <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
-                </div>
-                <div className="cost-row">
-                  <span>Shipping</span>
-                  <span className="text-success">Free Standard Delivery</span>
-                </div>
-                <hr className="cost-divider" />
-                <div className="cost-row total-row">
-                  <span>Total Amount Paid</span>
-                  <strong>{money(order.totalAmount, order.currency)}</strong>
-                </div>
+                    <span className="console-line-item__total">${lineTotal.toFixed(2)}</span>
+                  </li>
+                );
+              })}
+            </ul>
+
+            <div className="console-totals">
+              <div className="console-totals__row">
+                <span>Subtotal</span>
+                <span>
+                  {order.subtotalAmount !== null && order.subtotalAmount !== undefined
+                    ? money(order.subtotalAmount, order.currency)
+                    : `$${subtotal.toFixed(2)}`}
+                </span>
+              </div>
+              <div className="console-totals__row">
+                <span>{order.shippingMethod || "Shipping"}</span>
+                {order.shippingFee === null || order.shippingFee === undefined ? (
+                  <span className="console-muted" style={{ fontSize: "inherit" }}>Included</span>
+                ) : Number(order.shippingFee) > 0 ? (
+                  <span>{money(order.shippingFee, order.currency)}</span>
+                ) : (
+                  <span style={{ color: "var(--c-success)", fontWeight: 600 }}>FREE</span>
+                )}
+              </div>
+              <div className="console-totals__row console-totals__row--total">
+                <span>Total amount paid</span>
+                <span>{money(order.totalAmount, order.currency)}</span>
               </div>
             </div>
           </div>
+        </section>
 
-          {/* Right Column: Customer & Delivery information */}
-          <div className="order-details-sidebar">
-            <div className="dashboard-panel">
-              <h2 className="panel-title">Delivery & Customer</h2>
+        {/* Delivery */}
+        <section className="console-panel">
+          <div className="console-panel__head">
+            <h2>Delivery &amp; customer</h2>
+          </div>
 
-              <div className="delivery-info-section">
-                <span className="delivery-label">Customer Name</span>
-                <strong>
-                  {order.shippingDetails?.fullName || "Aura Customer"}
-                </strong>
+          <div className="console-panel__body">
+            <dl className="console-dl">
+              <div>
+                <dt>Customer name</dt>
+                <dd><strong>{order.shippingDetails?.fullName || "Aura Customer"}</strong></dd>
               </div>
 
-              <div className="delivery-info-section">
-                <span className="delivery-label">Email Address</span>
-                <span>{order.shippingDetails?.email || "Provided via Stripe"}</span>
+              <div>
+                <dt>Email address</dt>
+                <dd>{order.shippingDetails?.email || "Provided via Stripe"}</dd>
               </div>
 
               {order.shippingDetails?.phone && (
-                <div className="delivery-info-section">
-                  <span className="delivery-label">Phone</span>
-                  <span>{order.shippingDetails.phone}</span>
+                <div>
+                  <dt>Phone</dt>
+                  <dd>{order.shippingDetails.phone}</dd>
                 </div>
               )}
 
-              <div className="delivery-info-section">
-                <span className="delivery-label">Shipping Destination</span>
-                {order.shippingDetails?.address ? (
-                  <address className="order-address">
-                    {order.shippingDetails.address.line1 && (
-                      <div>{order.shippingDetails.address.line1}</div>
-                    )}
-                    {order.shippingDetails.address.line2 && (
-                      <div>{order.shippingDetails.address.line2}</div>
-                    )}
-                    <div>
-                      {[
-                        order.shippingDetails.address.city,
-                        order.shippingDetails.address.state,
-                        order.shippingDetails.address.postal_code,
-                      ]
-                        .filter(Boolean)
-                        .join(", ")}
-                    </div>
-                    {order.shippingDetails.address.country && (
-                      <div>{order.shippingDetails.address.country}</div>
-                    )}
-                  </address>
-                ) : (
-                  <p className="order-address">Address confirmed via Stripe payment gateway</p>
-                )}
+              <div>
+                <dt>Shipping destination</dt>
+                <dd>
+                  {order.shippingDetails?.address ? (
+                    <address>
+                      {order.shippingDetails.address.line1 && (
+                        <div>{order.shippingDetails.address.line1}</div>
+                      )}
+                      {order.shippingDetails.address.line2 && (
+                        <div>{order.shippingDetails.address.line2}</div>
+                      )}
+                      <div>
+                        {[
+                          order.shippingDetails.address.city,
+                          order.shippingDetails.address.state,
+                          order.shippingDetails.address.postal_code,
+                        ]
+                          .filter(Boolean)
+                          .join(", ")}
+                      </div>
+                      {order.shippingDetails.address.country && (
+                        <div>{order.shippingDetails.address.country}</div>
+                      )}
+                    </address>
+                  ) : (
+                    "Address confirmed via Stripe payment gateway"
+                  )}
+                </dd>
               </div>
+            </dl>
 
-              <div className="delivery-guarantee-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                </svg>
-                <span>Encrypted transaction protected by 30-Day Guarantee</span>
-              </div>
+            <div className="console-note">
+              <Icon name="shieldCheck" />
+              <span>Encrypted transaction protected by our 30-day guarantee.</span>
             </div>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );
