@@ -16,7 +16,7 @@ const authHeaders = () => {
 
 
 export const googleLogin = async (credential) => {
-  const response = await api.post("/auth/google", {
+  const response = await axios.post(`${API_URL}/google`, {
     credential,
   });
 
@@ -361,6 +361,7 @@ const authService = {
   forgotPassword,
   resetPassword,
   logout,
+  googleLogin,
   getOrders,
   getOrder,
   getProducts,
