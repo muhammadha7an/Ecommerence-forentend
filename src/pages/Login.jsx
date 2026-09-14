@@ -15,7 +15,27 @@ function Login() {
   });
 
 
+  const handleGoogleSuccess = async (credential) => {
+  try {
+    setLoading(true);
+    setError("");
 
+    const data = await authService.googleLogin(credential);
+
+    localStorage.setItem("token", data.token);
+
+    // Keep your existing login success logic here
+
+    navigate("/");
+  } catch (error) {
+    setError(
+      error.response?.data?.message ||
+      "Google login failed. Please try again."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 const handleGoogleSuccess = async (credential) => {
   try {
     setLoading(true);
