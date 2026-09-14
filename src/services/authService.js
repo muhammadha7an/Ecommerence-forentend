@@ -14,6 +14,16 @@ const authHeaders = () => {
   return headers;
 };
 
+
+export const googleLogin = async (credential) => {
+  const response = await api.post("/auth/google", {
+    credential,
+  });
+
+  return response.data;
+};
+
+
 const signup = async (userData) => {
   const response = await axios.post(`${API_URL}/signup`, userData);
   return response.data;

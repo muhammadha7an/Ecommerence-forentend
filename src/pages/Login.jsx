@@ -4,6 +4,7 @@ import authService from "../services/authService";
 import AuthShell from "../components/AuthShell";
 import PasswordInput from "../components/PasswordInput";
 import Icon from "../components/Icon";
+import GoogleLoginButton from "../components/GoogleLoginButton";
 
 function Login() {
   const navigate = useNavigate();
@@ -12,6 +13,29 @@ function Login() {
     email: "",
     password: "",
   });
+
+
+  const handleGoogleSuccess = async (credential) => {
+  try {
+    setLoading(true);
+    setError("");
+
+    const data = await authService.googleLogin(credential);
+
+    localStorage.setItem("token", data.token);
+
+    // Keep your existing login success logic here
+
+    navigate("/");
+  } catch (error) {
+    setError(
+      error.response?.data?.message ||
+      "Google login failed. Please try again."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -47,6 +71,7 @@ function Login() {
       subtitle="Sign in to track orders, manage your wishlist and check out faster."
       icon="user"
       footer={
+ 
         <p>
           Don't have an account?{" "}
           <Link to="/signup" className="ui-link">
@@ -107,6 +132,20 @@ function Login() {
           )}
         </button>
       </form>
+
+
+      <div className="social-login">
+  <div className="auth-divider">
+    <span>OR</span>
+  </div>
+
+  <GoogleLoginButton
+    onSuccess={handleGoogleSuccess}
+    onError={(message) => setError(message)}
+  />
+</div>
+
+
     </AuthShell>
   );
 }

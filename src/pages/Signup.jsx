@@ -4,6 +4,7 @@ import authService from "../services/authService";
 import AuthShell from "../components/AuthShell";
 import PasswordInput from "../components/PasswordInput";
 import Icon from "../components/Icon";
+import GoogleLoginButton from "../components/GoogleLoginButton";
 
 function Signup() {
   const navigate = useNavigate();
@@ -13,6 +14,29 @@ function Signup() {
     email: "",
     password: "",
   });
+
+  const handleGoogleSuccess = async (credential) => {
+  try {
+    setLoading(true);
+    setError("");
+
+    const data = await authService.googleLogin(credential);
+
+    localStorage.setItem("token", data.token);
+
+    // Keep your existing auth state logic
+
+    navigate("/");
+  } catch (error) {
+    setError(
+      error.response?.data?.message ||
+      "Google signup failed. Please try again."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -140,6 +164,19 @@ function Signup() {
           )}
         </button>
       </form>
+
+      <div className="social-login">
+  <div className="auth-divider">
+    <span>OR</span>
+  </div>
+
+  <GoogleLoginButton
+    onSuccess={handleGoogleSuccess}
+    onError={(message) => setError(message)}
+  />
+</div>
+
+
     </AuthShell>
   );
 }
