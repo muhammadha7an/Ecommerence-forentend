@@ -20,13 +20,12 @@ function Signup() {
     setLoading(true);
     setError("");
 
-    const data = await authService.googleLogin(credential);
+  const data = await authService.googleLogin(credential);
 
-    localStorage.setItem("token", data.token);
+localStorage.setItem("token", data.token);
+localStorage.setItem("user", JSON.stringify(data.user));
 
-    // Keep your existing auth state logic
-
-    navigate("/");
+navigate("/");
   } catch (error) {
     setError(
       error.response?.data?.message ||
