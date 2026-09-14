@@ -24,13 +24,7 @@ export const googleLogin = async (credential) => {
 };
 
 
-export const googleLogin = async (credential) => {
-  const response = await api.post("/auth/google", {
-    credential,
-  });
 
-  return response.data;
-};
 
 
 const signup = async (userData) => {
