@@ -36,26 +36,7 @@ function Login() {
     setLoading(false);
   }
 };
-const handleGoogleSuccess = async (credential) => {
-  try {
-    setLoading(true);
-    setError("");
 
-    const data = await authService.googleLogin(credential);
-
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
-
-    navigate("/");
-  } catch (error) {
-    setError(
-      error.response?.data?.message ||
-      "Google login failed. Please try again."
-    );
-  } finally {
-    setLoading(false);
-  }
-};
 
 
   const [error, setError] = useState("");
