@@ -15,7 +15,8 @@ function Login() {
   });
 
 
-  const handleGoogleSuccess = async (credential) => {
+
+const handleGoogleSuccess = async (credential) => {
   try {
     setLoading(true);
     setError("");
@@ -23,8 +24,7 @@ function Login() {
     const data = await authService.googleLogin(credential);
 
     localStorage.setItem("token", data.token);
-
-    // Keep your existing login success logic here
+    localStorage.setItem("user", JSON.stringify(data.user));
 
     navigate("/");
   } catch (error) {
@@ -36,6 +36,7 @@ function Login() {
     setLoading(false);
   }
 };
+
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
