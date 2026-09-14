@@ -205,3 +205,34 @@
     padding: var(--sp-6) var(--sp-5);
   }
 }
+
+.social-login{
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+.social-login {
+  max-width: 100% !important; 
+  width: 100%;
+}
+
+.social-login {
+  height: 70px !important;
+  width: 450px !important;
+}
+
+.social-login .container-div{
+  max-width: 100%;
+  width: 100%;
+}
+.social-login .container-div div {
+  width: 390px !important;
+  max-width: 100% !important;
+  min-width: 390px !important;
+  padding: 30px;
+}
+
+
+
